@@ -1,0 +1,117 @@
+#
+# mqttdemo.apy
+#
+# This apyshell script demonstrates receiving and processing messages
+# published to an MQTT broker.
+#
+# It connects to a broker running on the local machine, and listens
+# for messages send by a Cricket IOT module.
+#
+# Mark Anacker  closecrowd@pm.me
+# -------------------------------------------------------------------
+
+#install_('time')
+
+#
+# Load the mqttext.py extension - if this invocation of
+# apyshell.py has it available in the designated extensions
+# directory.  By default, it would be.
+#
+e = loadExtension_('mqttext')
+if not e:
+    print('Failed to load the mqtt extension!')
+    exit_(1)
+
+# Every mqtt broker connection has a name.
+cname = 'mqttdemo'
+
+# This is the topic string for all messages from this device
+alltopic = 'link/iot/c2/#'
+
+# This is the IP address of our broker.
+brokerip = '127.0.0.1'
+
+# Crickets report temp in C (they're British).  Convert
+# to proper F units....
+def ctof(val):
+    return (val * 1.8) + 32
+
+# Connect to the broker, using our connection name (cname)
+# as the client name also.  This is just for convenience -
+# you would probably used a meaningful name for the client
+# here (name=)
+m = mqtt_connect_(cname,  broker=brokerip, name=cname)
+if not m:
+    print('Failed to connect to mqtt!')
+    exit_(2)
+
+
+print('connected to', brokerip,'as',cname)
+
+mqtt_subscribe_(cname, alltopic)
+print('subscribed to', alltopic)
+
+#
+# Poll for messages.  Note that *all* messages that this
+# connection has subscribed to will come through here.  If you have
+# multiple topics subscribed, you get to sort them out yourself.
+#
+# This is one of the ways that we can get messages from the topics 
+# we subscribe to. As someone once said: "there is another...".
+# Please see the other mqttdemo scripts to see how per-topic
+# callbacks work.
+#
+# Incoming messages are put in a queue - mqtt_readmsg_() grabs the
+# next available message (if any).  There's a timeout if nothing is
+# there yet.
+#
+while True:
+  # read the next available message
+  msg = mqtt_readmsg_(cname,  blocking=True, timeout=5)
+  # got something
+  if msg != None:
+      # print the entire message so you can see it
+      print('msg:', msg)
+      # the message is a tuple with the following elements:
+      # pay - the message payload (decoded utf-8)
+      # top - the complete topic of this message
+      # qos - the QOS the message was published with
+      # rtain - the message retain flag
+      # connname - the connection name this message came over
+      (pay, top, qos, rtain, connname) = msg
+
+      # split the topic
+      cols = split(top, '/', 2)
+      # we only want part of it
+      (a, b, label) = cols
+      # if this is a temperature value:
+      if label == 'c1/temp' or label == 'c1/io3_ds18b20' or label == 'c2/temp' or label == 'c2/io3_ds18b20':
+          tempf = ctof(float(pay))
+          print('      **', tempf)
+
+# cleanly disconnect from the broker
+mqtt_disconnect_()
+
+exit_(0)
+
+#
+# This is what the output would look like:
+#
+# -->  connected to 127.0.0.1 as mqttdemo
+# -->  subscribed to link/iot/c2/#
+# -->  msg: ('c2', 'link/iot/c2/device_name', 0, 1, 'mqttdemo')
+# -->  msg: ('D7923E5656', 'link/iot/c2/device_sn', 0, 1, 'mqttdemo')
+# -->  msg: ('212886', 'link/iot/c2/hwc_wake_up', 0, 1, 'mqttdemo')
+# -->  msg: ('212856', 'link/iot/c2/hwc_wifi_enabled', 0, 1, 'mqttdemo')
+# -->  msg: ('204650', 'link/iot/c2/hwc_message_sent', 0, 1, 'mqttdemo')
+# -->  msg: ('10.20', 'link/iot/c2/temp', 0, 1, 'mqttdemo')
+# -->        ** 50.36
+# -->  msg: ('9.75', 'link/iot/c2/io3_ds18b20', 0, 1, 'mqttdemo')
+# -->        ** 49.55
+# -->  msg: ('1', 'link/iot/c2/io3', 0, 1, 'mqttdemo')
+# -->  msg: ('3.34', 'link/iot/c2/batt_voltage', 0, 1, 'mqttdemo')
+# -->  msg: ('245', 'link/iot/c2/batt', 0, 1, 'mqttdemo')
+# -->  msg: ('0', 'link/iot/c2/io1_wake_up', 0, 1, 'mqttdemo')
+# -->  msg: ('1', 'link/iot/c2/rtc_wake_up', 0, 1, 'mqttdemo')
+# 
+
