@@ -1,0 +1,18 @@
+#
+# demoinput.apy
+#
+# This script simply demonstrates the input_() function
+# from the "utilext" extension
+#
+
+# load the extension
+loadExtension_('utilext')
+
+# prompt the user to enter something.  If they don't withint 5 seconds,
+# the string "time!" will be be returned
+try:
+  f = input_('type something ', '--', timeout=5, todef='time!', toraise=False)
+  print('you typed:', f)
+except Exception as e:
+  print('exception:', str(e), prefix=None)
+

@@ -1,0 +1,83 @@
+#
+# demo.apy
+#
+# This little script demonstrates some of the basic
+# features of apyshell.
+#
+
+print('Welcome to apyshell!')
+
+# add the 'time' built-ins
+install_('time')
+
+# this gives us the following functions from the Python 'time' module:
+#
+# ctime_, clock_, asctime_, strptime_, monotonic_,
+# gmtime_, mktime_, sleep_, time_, strftime_, localtime_
+#
+# and constants:
+#
+# _altzone, _timezone, _tzname, _daylight
+#
+#
+
+# grab the time and date
+t = asctime_(localtime_())
+print('Right now, it is:', t)
+
+# get our hostname passed in by apyshell:
+host = getSysVar_('hostname')
+print('We are currently running on '+host)
+
+# and the host Python version
+ver = getSysVar_('pythonver')
+print('Under Python version:',ver)
+
+#
+# Extensions
+#
+
+# get the list of extensions that may be loaded by scripts
+availlist = scanExtensions_()
+print('These extensions are available:', availlist)
+
+# and the list of currently-loaded ones
+loadedlist = listExtensions_()
+print('These extensions are loaded:', loadedlist)
+
+# load the small utility extension
+loadExtension_('utilext')
+
+# and see the difference
+print('Now we can use:', listExtensions_())
+
+# or we can just test for it:
+print('Is it loaded:', isExtLoaded_('utilext'))
+
+print('Getting rid of utilext')
+
+# get rid of it...
+unloadExtension_('utilext')
+
+# what about now?
+print('Is is loaded now:', isExtLoaded_('utilext'))
+
+#
+# we can handle exceptions.  cause them, too...
+#
+
+print('Exception handling...')
+
+try:
+  print('Protected by the try:')
+  # fake an error condition
+  raise Exception('An error happened')
+except Exception as e:
+  # note that we give this output line a different prefix...
+  print('Except:', str(e), prefix='!!!! ')
+
+
+
+print("That's the end for now")
+
+
