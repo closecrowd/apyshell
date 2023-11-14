@@ -259,11 +259,16 @@ class MqttExt():
 #----------------------------------------------------------------------
 
 class MqttConnection():
+    """
+        This class represents a connection to a broker.  There can be
+        several connections active simultaneously, linked to different
+        brokers.  Or all to the same broker, but that would be inefficient.
 
+    """
     def __init__(self, name, api):
-        self.__api = api
+        self.__api = api                # ExtensionManager API
 
-        self.__connname = name    # connection name
+        self.__connname = name          # connection name
         # user parameters - defaults
         self.__name = ''
         self.__handler = None
@@ -271,20 +276,20 @@ class MqttConnection():
         self.__broker = '127.0.0.1'
         self.__bport = 1883
 
-        self.__username = None
+        self.__username = None          # broker authentication
         self.__password = None
 
-        self.__tlscafile = None
+        self.__tlscafile = None         # link security
         self.__tlscertfile = None
         self.__tlskeyfile = None
         self.__tlsvers = None
         self.__tlsinsecure = False
 
-        self.__kainterval = 30
+        self.__kainterval = 30          # keep-alive interval
         self.__clientid = 'mqtt'
         self.__timeout = 10
-        self.__autoreconnect = True
-        self.__tos = 0
+        self.__autoreconnect = True     # reconnect if the link goes away
+        self.__tos = 0                  # see MQTT TOS specs
 
 
         # run-time vars
@@ -424,6 +429,7 @@ class MqttConnection():
         except:
             return None
 
+    # send a message to a topic (or topics)
     def sendmsg_(self, dest, data, qos=0, retain=False):
         if self.__client == None:
             return False

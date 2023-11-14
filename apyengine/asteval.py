@@ -86,6 +86,8 @@ ALL_NODES = ['arg', 'assert', 'assign', 'attribute', 'augassign', 'binop',
 
 symlock = RLock()
 
+raise_errors = True
+
 ##############################################################################
 
 # ----------------------------------------------------------------------------
@@ -127,7 +129,8 @@ class Interpreter(object):
 
     def __init__(self, symtable=None, usersyms=None, writer=None,
                  err_writer=None, readonly_symbols=None, builtins_readonly=True,
-                 global_funcs=False, max_statement_length=50000, no_print=False):
+                 global_funcs=False, max_statement_length=50000, no_print=False,
+                 raise_errors=False):
 
         self.writer = writer or stdout
         self.err_writer = err_writer or stderr
@@ -144,6 +147,7 @@ class Interpreter(object):
         symtable['print'] = self._printer   # install the print() function
         symtable['errline_'] = 0            # lineno of the last error
         self.no_print = no_print            # disable print entirely
+        self.raise_errors = raise_errors
 
         self.symtable = symtable
         self._interrupt = None
@@ -457,7 +461,7 @@ class Interpreter(object):
             errmsg = exc_info()[1]
             if len(self.error) > 0:
                 errmsg = "\n".join(self.error[0].get_error())
-            if raise_errors:
+            if self.raise_errors:
                 try:
                     exc = self.error[0].exc
                 except:

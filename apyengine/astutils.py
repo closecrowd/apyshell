@@ -206,7 +206,7 @@ def type_(obj, *varargs, **varkws):
 
 # replacement for string.split()
 def split_(s, str="", num=0):
-    if num > 0:
+    if num != 0:
         return s.split(str, num)
     else:
         return s.split(str)

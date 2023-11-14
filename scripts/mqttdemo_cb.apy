@@ -1,11 +1,12 @@
 #
-# mqttdemo.apy
+# mqttdemo_cb.apy
 #
 # This apyshell script demonstrates receiving and processing messages
 # published to an MQTT broker.
 #
 # It connects to a broker running on the local machine, and listens
-# for messages send by a Cricket IOT module.
+# for messages send by a Cricket IOT module.  In this script, incoming
+# messages are passed to a callback function.  
 #
 # Mark Anacker  closecrowd@pm.me
 # -------------------------------------------------------------------
@@ -36,6 +37,32 @@ brokerip = '127.0.0.1'
 def ctof(val):
     return (val * 1.8) + 32
 
+#
+# This is a per-topic handler. When a message comes in on a
+# subscription that was tagged with this function, it will go 
+# here instead of to the default queue.
+#
+# This function runs in the context of a background thread, so
+# we don't want to do too much here.  A bit of format conversion,
+# some filtering, then toss it onto a queue.
+#
+def gettemp(msg):
+
+    # same tuple format as the default queue
+    (pay, top, qos, rtain, connname) = msg
+
+    # split the topic string (i.e. link/iot/c2/io3_ds18b20 )
+    cols = split(top, '/', -1)
+    # we only want part of it
+    (a, b, c, label) = cols
+    # if this is a temperature value:
+    if label == 'temp' or label == 'io3_ds18b20':
+        tempf = ctof(float(pay))
+        print('      **', label, tempf)
+
+
+
+
 # Connect to the broker, using our connection name (cname)
 # as the client name also.  This is just for convenience -
 # you would probably used a meaningful name for the client
@@ -45,21 +72,26 @@ if not m:
     print('Failed to connect to mqtt!')
     exit_(2)
 
-
 print('connected to', brokerip,'as',cname)
 
+
+# send the temperature messages to the callback handler
+mqtt_subscribe_(cname, 'link/iot/c2/temp', 'gettemp')
+mqtt_subscribe_(cname, 'link/iot/c2/io3_ds18b20', 'gettemp')
+
+# and add a general subscription - no handler, so we poll
 mqtt_subscribe_(cname, alltopic)
 print('subscribed to', alltopic)
 
 #
-# Poll for messages.  Note that *all* messages that this
-# connection has subscribed to will come through here.  If you have
-# multiple topics subscribed, you get to sort them out yourself.
+# Poll for messages.  Note that all messages that this
+# connection has subscribed to and do *NOT* have callbacks will 
+# come through here.  Messages with handlers in the mqtt_subscribe_()
+# call go to those handlers, and not to the general queue.
 #
-# This is one of the ways that we can get messages from the topics 
-# we subscribe to. As someone once said: "there is another...".
-# Please see the other mqttdemo scripts to see how per-topic
-# callbacks work.
+# This example uses both polling and callbacks.  You can use both
+# or either - you don't HAVE to poll for message if your script
+# has better things to do with it's cycles.
 #
 # Incoming messages are put in a queue - mqtt_readmsg_() grabs the
 # next available message (if any).  There's a timeout if nothing is
@@ -79,15 +111,6 @@ while True:
       # rtain - the message retain flag
       # connname - the connection name this message came over
       (pay, top, qos, rtain, connname) = msg
-
-      # split the topic
-      cols = split(top, '/', 2)
-      # we only want part of it
-      (a, b, label) = cols
-      # if this is a temperature value:
-      if label == 'c2/temp' or label == 'c2/io3_ds18b20':
-          tempf = ctof(float(pay))
-          print('      **', label, tempf)
 
 # cleanly disconnect from the broker
 mqtt_disconnect_()
