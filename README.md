@@ -65,3 +65,23 @@ If you have the scripts and extensions directories under the default '/opt/apysh
 
     ./apyshell.py demo
 
+### Extensions
+
+Extensions provide advanced features to your scripts, while keeping things safe and simple.  The selection of extensions available to scripts is controlled by the **extensiondir**  option.  
+
+There are many extensions in development.  They'll be added to the GitHub repo as quickly as their documentation and sample scripts can be updated.
+
+Currently available are:
+
+- mqttext - A full-featured MQTT client
+
+- sqliteext - Manage SqlIte3 databases
+
+- queueext - A utility extension providing thread-safe queues (FIFO and LIFO)
+
+- fileext - Simple path-restricted text file operations
+
+- utilext - A utility extension with several useful functions
+
+
+more will be coming soon.

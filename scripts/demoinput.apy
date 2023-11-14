@@ -4,6 +4,8 @@
 # This script simply demonstrates the input_() function
 # from the "utilext" extension
 #
+# Mark Anacker <closecrowd@pm.me>
+# --------------------------------------------------------------------
 
 # load the extension
 loadExtension_('utilext')

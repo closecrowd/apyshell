@@ -77,6 +77,7 @@ def sanitizePath(path):
 
     np = os.path.normpath(path)
     (p, f) = os.path.split(np)
+
     path = os.path.join(p, f)
 
 

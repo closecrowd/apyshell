@@ -11,7 +11,7 @@
     connection is seperate from the others, and each may have multiple
     topics subscribed to it.
 
-    Make these functions available to a script by adding:
+    Make the functions available to a script by adding:
 
         loadExtension_('mqttext')
 
@@ -174,9 +174,11 @@ class MqttExt():
     def connect_(self, cname=defaultName, **kwargs):
         debugMsg(MODNAME, 'mqtt:connect:',kwargs, type(kwargs))
 
+        # check the format of the connectionname
         if not checkFileName(cname):
             return retError(self.__api, MODNAME, 'invalid name:'+cname)
 
+        # check for duplicate connection names
         if cname in self.__conns.keys():
             return retError(self.__api, MODNAME, 'name already used:'+cname)
 

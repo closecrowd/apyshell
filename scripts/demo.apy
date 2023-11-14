@@ -4,6 +4,8 @@
 # This little script demonstrates some of the basic
 # features of apyshell.
 #
+# Mark Anacker <closecrowd@pm.me>
+# --------------------------------------------------------------------
 
 print('Welcome to apyshell!')
 

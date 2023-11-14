@@ -1,0 +1,97 @@
+#
+# sqldemo.apy
+#
+# This script opens (or creates) a sqllite3 database and
+# writes some rows to it.  The directory location of the
+# database file itself is set by apyshell - the script sets
+# the filename.
+#
+# Mark Anacker <closecrowd@pm.me>
+# --------------------------------------------------------------------
+
+
+# make the time commands available
+install_('time')
+
+#
+# Load the sqliteext.py extension - if this invocation of
+# apyshell.py has it available in the designated extensions
+# directory.  By default, it would be.
+#
+e = loadExtension_('sqliteext')
+if not e:
+    print('Failed to load the sqllite extension!')
+    exit_(1)
+
+# a name for the connection to this database
+sqlconn = 'connname'
+
+# open (or create) the database named 'demodb' at the location
+# set by apyshell ('sql_root' option), with the extension also
+# set by apyshell ('sql_ext' option).
+
+rv = sql_open_(sqlconn, 'demodb', autocommit=True, check_same_thread=False)
+if not rv:
+    print('Failed to open the database!')
+    exit_(2)
+
+
+# we're going to use a table called "demotime"
+# see if it's in the db:
+res = sql_execute_(sqlconn, "SELECT name FROM sqlite_master where name='demotime'")
+# nope - we have the create it
+if res.fetchone() == None:
+  print('creating our table')
+  sql_execute_(sqlconn, "create table demotime(id, timestamp, data)")
+
+print('running')
+
+# let's add some valuable(?) data....
+for cnt in range(1, 11):
+  print(cnt)
+
+  # add the row
+  sql_execute_(sqlconn, "insert into demotime(id, timestamp) values(?,?);", cnt, asctime_(localtime_()))
+
+  # delay 2 seconds so the timestamp advances
+  sleep_(2)
+
+# print how many updates we made to the db
+print('changes:', sql_changes_(sqlconn))
+
+# all done - close up
+rv = sql_close_(sqlconn)
+
+exit_(0)
+
+#
+# this is what the output looks like:
+#
+# -->  creating our table
+# -->  running
+# -->  1
+# -->  2
+# -->  3
+# -->  4
+# -->  5
+# -->  6
+# -->  7
+# -->  8
+# -->  9
+# -->  10
+# -->  changes: 10
+# 
+# And this is what the database holds:
+#
+# sqlite3 /tmp/demodb.db 'select * from demotime;'
+# 1|Tue Nov 14 12:41:21 2023|
+# 2|Tue Nov 14 12:41:23 2023|
+# 3|Tue Nov 14 12:41:25 2023|
+# 4|Tue Nov 14 12:41:27 2023|
+# 5|Tue Nov 14 12:41:29 2023|
+# 6|Tue Nov 14 12:41:31 2023|
+# 7|Tue Nov 14 12:41:33 2023|
+# 8|Tue Nov 14 12:41:35 2023|
+# 9|Tue Nov 14 12:41:37 2023|
+# 10|Tue Nov 14 12:41:39 2023|
+# 

@@ -40,7 +40,7 @@ extensiondir = '/opt/apyshell/extensions'   # entension base dir
 # options passed to extensions.
 extension_opts = {  'allow_redis_cmds':True, 'allow_system':True,
                     'file_root':'/opt/apyshell/files',  'allow_getenv':True,
-                    'sql_root':'/tmp'
+                    'sql_root':'/tmp', 'sql_ext':'db'
 }
 
 # ----------------------------------------------------------------------------

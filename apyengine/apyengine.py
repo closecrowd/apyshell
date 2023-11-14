@@ -68,7 +68,8 @@ class ApyEngine():
 
         # load the interpreter
         self.__ast = Interpreter(writer=writer, err_writer=err_writer,
-                            builtins_readonly=builtins_readonly, global_funcs=global_funcs)
+                            builtins_readonly=builtins_readonly, global_funcs=global_funcs,
+                            raise_errors=False)
 
         if sys.platform.startswith('win'):
             self.__windows = True
