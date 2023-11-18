@@ -1,15 +1,20 @@
-"""
-   ApyEngine - An environment for running Python-subset scripts in a relatively
-        safe manner.
+"""ApyEngine - An interpreter for running Python-subset scripts.
 
-    This package incorporates "asteval" from https://github.com/newville/asteval
+This package contains an interpreter for a safe subset of the
+Python3 language.  It does NOT run stand-alone, but must be
+imported into a host application.
 
-    version: 1.0
-    last update: 2023-Nov-13
-    License:  MIT
-    Author:  Mark Anacker <closecrowd@pm.me>
+The companion project "apyshell" demonstrates how to fully use and control
+this engine. <https://github.com/closecrowd/apyshell>
 
-    Copyright (c) 2023 by Mark Anacker.   All Rights Reserved
+Credits:
+    * version: 1.0
+    * last update: 2023-Nov-17
+    * License:  MIT
+    * Author:  Mark Anacker <closecrowd@pm.me>
+    * Copyright (c) 2023 by Mark Anacker
+Note:
+    * This package incorporates "asteval" from https://github.com/newville/asteval
 
 """
 
@@ -19,8 +24,8 @@ from .astutils import (NameFinder, valid_symbol_name,
                        make_symbol_table, get_ast_names)
 from ._version import get_versions
 
-__all__ = ['AstEngine', 'Interpreter', 'NameFinder', 'valid_symbol_name',
-           'make_symbol_table', 'get_ast_names', 'ApyEngine']
+__all__ = ['ApyEngine', 'Interpreter', 'NameFinder', 'valid_symbol_name',
+           'make_symbol_table', 'get_ast_names']
 
 __version__ = get_versions()['version']
 del get_versions

@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
-"""
-    extensionmgr - Handles extension load/unload for apyshell
+"""extensionmgr - Handles extension load/unload for apyshell.
 
-    This script supports the extension handling commands for
-    apyshell.
+This script supports the extension handling commands for apyshell.
 
-    version: 1.0
-    last update: 2023-Nov-13
-    License:  MIT
-    Author:  Mark Anacker <closecrowd@pm.me>
-    Copyright (c) 2023 by Mark Anacker
---------------------------------------------------------------------
+Credits:
+    * version: 1.0
+    * last update: 2023-Nov-13
+    * License:  MIT
+    * Author:  Mark Anacker <closecrowd@pm.me>
+    * Copyright (c) 2023 by Mark Anacker
+
 """
 
 import os

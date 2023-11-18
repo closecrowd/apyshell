@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-"""
-    extensionapi -  An instance of this class is passed to the extensions
-                    at load time to give them an API back into the engine
-                    via the ExtensionMgr
+"""extensionapi - The interface between extensions and the engine.
 
-    version: 1.0
-    last update: 2023-Nov-13
-    License:  MIT
-    Author:  Mark Anacker <closecrowd@pm.me>
-    Copyright (c) 2023 by Mark Anacker
---------------------------------------------------------------------
+An instance of this class is passed to the extensions at load time
+to give them an API back into the engine via the ExtensionMgr
+
+Credits:
+    * version: 1.0
+    * last update: 2023-Nov-13
+    * License:  MIT
+    * Author:  Mark Anacker <closecrowd@pm.me>
+    * Copyright (c) 2023 by Mark Anacker
+
 """
 
 from support import *

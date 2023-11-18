@@ -1,18 +1,16 @@
 #!/usr/bin/env python3
-"""
-    astutils - utility functions for asteval
+"""astutils - utility functions for asteval
 
-    Originally:
-        Matthew Newville <newville@cars.uchicago.edu>,
-        The University of Chicago
+Credits:
+    * version: 1.0
+    * last update: 2023-Nov-13
+    * License:  MIT
+    * Author:  Mark Anacker <closecrowd@pm.me>
+    * Copyright (c) 2023 by Mark Anacker
 
-    version: 1.0
-    last update: 2023-Nov-13
-    License:  MIT
-    Author:  Mark Anacker <closecrowd@pm.me>
+Note:
+    Originally by: Matthew Newville, The University of Chicago, <newville@cars.uchicago.edu>
 
-    Copyright (c) 2023 by Mark Anacker.   All Rights Reserved
---------------------------------------------------------------------
 """
 
 from __future__ import division, print_function
@@ -186,19 +184,10 @@ JSON_RENAMED = {'dumps':'jsondumps_', 'loads':'jsonloads_'}
 
 
 # python modules that may be installed by scripts with the install_() function
+# and their symbols (defined above)
 MODULE_LIST = {'python':FROM_PY, 'math':FROM_MATH, 'time':FROM_TIME, 'numpy':FROM_NUMPY, 'base64':FROM_BASE64, 'json':FROM_JSON}
 
 ##############################################################################
-
-'''
-def _open(filename, mode='r', buffering=0):
-    """read only version of open()"""
-    if mode not in ('r', 'rb', 'rU'):
-        raise RuntimeError("Invalid open file mode, must be 'r', 'rb', or 'rU'")
-    if buffering > MAX_OPEN_BUFFER:
-        raise RuntimeError("Invalid buffering value, max buffer size is {}".format(MAX_OPEN_BUFFER))
-    return open(filename, mode, buffering)
-'''
 
 def type_(obj, *varargs, **varkws):
     """type that prevents varargs and varkws"""
@@ -206,6 +195,7 @@ def type_(obj, *varargs, **varkws):
 
 # replacement for string.split()
 def split_(s, str="", num=0):
+    """replacement for string split()"""
     if num != 0:
         return s.split(str, num)
     else:
@@ -213,6 +203,7 @@ def split_(s, str="", num=0):
 
 # case-insensitive string compare
 def strcasecmp_(s1, s2):
+    """case-insensitive string compare"""
     return (s1.casefold() == s2.casefold())
 
 LOCALFUNCS = {'type': type_, 'split':split_, 'strcasecmp':strcasecmp_}
@@ -277,19 +268,19 @@ OPERATORS = {ast.Is: lambda a, b: a is b,
 def valid_symbol_name(name):
     """Determine whether the input symbol name is a valid name.
 
-    Arguments
-    ---------
-      name  : str
-         name to check for validity.
-
-    Returns
-    --------
-      valid :  bool
-        whether name is a a valid symbol name
-
-    This checks for Python reserved words and that the name matches
+    This checks for Python reserved words, and that the name matches
     the regular expression ``[a-zA-Z_][a-zA-Z0-9_]``
+
+        Args:
+          name  : str
+             name to check for validity.
+
+        Returns:
+          valid :  bool
+            whether name is a a valid symbol name
+
     """
+
     if name in RESERVED_WORDS:
         return False
     return NAME_MATCH(name) is not None
@@ -297,11 +288,18 @@ def valid_symbol_name(name):
 
 def op2func(op):
     """Return function for operator nodes."""
+
     return OPERATORS[op.__class__]
 
 
 class Empty:
-    """Empty class."""
+    """Empty class.
+
+    This class is used as a return value in the __call__() and
+    on_return() methods in asteval.Interpreter.  If differentiates
+    between an empty return and one with an expression.
+
+    """
 
     def __init__(self):
         """TODO: docstring in public method."""
@@ -311,17 +309,32 @@ class Empty:
         """TODO: docstring in magic method."""
         return False
 
-
+# Set the global value to the return sentinel
 ReturnedNone = Empty()
 
 
 class ExceptionHolder(object):
-    """This class carries the info needed to properly route and
+    """Exception handler support.
+
+    This class carries the info needed to properly route and
     handle exceptions.  It's generally called from on_raise() in
-    asteval.py"""
+    asteval.py
+    """
 
     def __init__(self, node, exc=None, msg='', expr=None, lineno=0):
-        """Create a new Exception report object"""
+        """Create a new Exception report object
+
+        Holds some exception metadata.
+
+            Args:
+                node    :   Node that had an exception
+                exc     :   The exception
+                msg     :   Error message
+                expr    :   Expression that caused the exception
+                lineno  :   Source file line numner
+
+        """
+
         self.node = node
         self.expr = expr
         self.msg = msg
@@ -358,15 +371,21 @@ class ExceptionHolder(object):
 
 
 class NameFinder(ast.NodeVisitor):
-    """Find all symbol names used by a parsed node."""
+    """Find all symbol names used by a parsed node.
+
+    """
 
     def __init__(self):
-        """TODO: docstring in public method."""
+        """TODO: docstring in public method.
+        """
+
         self.names = []
         ast.NodeVisitor.__init__(self)
 
     def generic_visit(self, node):
-        """TODO: docstring in public method."""
+        """TODO: docstring in public method.
+        """
+
         if node.__class__.__name__ == 'Name':
             if node.ctx.__class__ == ast.Load and node.id not in self.names:
                 self.names.append(node.id)
@@ -381,27 +400,28 @@ if not isinstance(builtins, dict):
 
 def get_ast_names(astnode):
     """Return symbol Names from an AST node."""
+
     finder = NameFinder()
     finder.generic_visit(astnode)
     return finder.names
 
 
 def make_symbol_table(modlist, **kwargs):
-    """Create a default symboltable, taking dict of user-defined symbols.
 
-    Arguments
-    ---------
-    modlist : list
-        names of currently-installed modules
-    kwargs :  optional
-       additional symbol name, value pairs to include in symbol table
+    """Create a default symbol table
 
-    Returns
-    --------
-    symbol_table : dict
-       a symbol table that can be used in `asteval.Interpereter`
+    This function creates the default symbol table, and installs some pre-defined
+    symbols.
+
+        Args:
+            modlist : list names of currently-installed modules
+            **kwargs :  optional additional symbol name, value pairs to include in symbol table
+
+        Returns:
+            symbol_table : dict a symbol table that can be used in `asteval.Interpereter`
 
     """
+
     symtable = {}
 
     # by default, we only install the Python built-ins
@@ -421,6 +441,23 @@ def make_symbol_table(modlist, **kwargs):
 # scripts call this as install_('modname')
 #
 def install_python_module(symtable, modname, modlist):
+    """Install a pre-defined Python module.
+
+    This function will install one of the Python modules (listed in MODULE_LIST)
+    directly into the symbol table.  Some of the functions in the modules are
+    renamed to prevent conflicts with other modules.  Once installed, they can
+    not be uninstalled during this run of apyshell.
+
+    This is called by the install() function in asteval.py
+
+        Args:
+            symtable    :   The symbol table to install into
+            modname     :   The module name to install
+            modlist     :   A list of currently-installed modules
+        Returns:
+            The return value. True for success, False otherwise.
+
+    """
 
     # make sure this is an approved module
     if modname not in MODULE_LIST:

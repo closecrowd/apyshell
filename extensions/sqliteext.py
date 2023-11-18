@@ -78,17 +78,41 @@ class SqLiteExt():
 
     def __init__(self, api, options={}):
         '''
-        Parameters
-        ----------
-        api     : an instance of ExtensionAPI connecting us to the engine
-        options : a dict of option settings passed down to the extension
+        Constructs an instance of the SqLiteExt class.  This instance will manage
+        all connections to sqlite3 databases.  There will be only once of these
+        instances at a time.
 
-            Defined options:    'sql_root' - a path prepended to all
-                                database names, restricting access to
-                                db files below this point.
+        Args:
+            api     : an instance of ExtensionAPI connecting us to the engine.
+            options : a dict of option settings passed down to the extension.
 
-                                'sql_ext' - filename extension to use for
-                                database files.  Defaults to '.db'
+        Returns:
+            None
+
+        Attributes:
+            __api           : An instance of ExtensionAPI passed by the host, used
+                                to call back into the engine.  Copied from api.
+            __options       : A dict of options from the host that may or may not
+                                apply to this extension.  Copied from options.
+
+            __cmddict       : Dispatch table of our script command names and their
+                                functions.
+            __conns         : The table of active connections, indexed by name.
+            __cmdsflag      : If True, install the "redis_cmd_()" function.  Set
+                                in the options dict passed in.
+
+            sqlroot         : The path to prepend to database file names.
+            sqlext          : The file extension to append to database file names.
+
+            __locktimeout   : Timeout in seconds to wait for a mutex.
+            __lock          : Thread-locking mutex.
+
+        Defined options:    'sql_root' - a path prepended to all
+                            database names, restricting access to
+                            db files below this point.
+
+                            'sql_ext' - filename extension to use for
+                            database files.  Defaults to '.db'
         '''
 
         self.__api = api
@@ -123,11 +147,13 @@ class SqLiteExt():
             sql_cursor_fetch_() :   Return rows from a cursor after an execute_()
             sql_list_()         :   Return a list[] of the active connection names
 
+        Args:
+            None
+
         Returns
-        -------
-        True            :   Commands are installed and the extension is
+            True        :   Commands are installed and the extension is
                             ready to use.
-        False           :   Commands are NOT installed, and the extension
+            False       :   Commands are NOT installed, and the extension
                             is inactive.
         '''
 
@@ -225,7 +251,14 @@ class SqLiteExt():
 
     # close the db
     def sql_close_(self, cname):
-        ''' Close an open db connection '''
+        '''
+        Close an open db connection and remove the connection from the table.
+
+            Args:
+                cname:      The name of the connection to remove
+            Returns:
+                The return value. True for success, False otherwise.
+        '''
 
         try:
             if not self.__lock.acquire(blocking=True, timeout=self.__locktimeout):
@@ -285,7 +318,17 @@ class SqLiteExt():
 
 
     def sql_list_(self):
-        '''' Return a list[] of open connections '''
+        ''''
+        Return a list[] of open connections.
+
+            Args:
+                None
+            Returns:
+                A list[] of active connections.  The list may be empty if
+                there are no connections.
+
+                None if there was an error.
+        '''
 
         ret = None
         try:
@@ -315,6 +358,9 @@ class SqlLiteConnection():
     '''
 
     def __init__(self, name,  api):
+        '''
+        '''
+
         self.__name = name
         self.__api = api
         self.__dbname = ''

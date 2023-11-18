@@ -87,10 +87,28 @@ class MqttExt():
 
     def __init__(self, api, options={}):
         '''
-        Parameters
-        ----------
-        api     : an instance of ExtensionAPI connecting us to the engine
-        options : a dict of option settings passed down to the extension
+        Constructs an instance of the MqttExt class.  This instance will manage
+        all connections to mqtt brokers.  There will be only once of these
+        instances at a time.
+
+        Args:
+            api     : an instance of ExtensionAPI connecting us to the engine.
+            options : a dict of option settings passed down to the extension.
+
+        Returns:
+            None
+
+        Attributes:
+            __api           : An instance of ExtensionAPI passed by the host, used
+                                to call back into the engine.  Copied from api.
+            __options       : A dict of options from the host that may or may not
+                                apply to this extension.  Copied from options.
+
+            __cmddict       : Dispatch table of our script command names and their
+                                functions.
+            __conns         : The table of active connections, indexed by name.
+            __locktimeout   : Timeout in seconds to wait for a mutex.
+            __lock          : Thread-locking mutex.
 
         '''
 
@@ -118,11 +136,13 @@ class MqttExt():
             mqtt_readmsg_()     : Return the first availabel message on the connection
             mqtt_sendmsg_()     : Send a message to a given topic
 
+        Args:
+            None
+
         Returns
-        -------
-        True            :   Commands are installed and the extension is
+            True        :   Commands are installed and the extension is
                             ready to use.
-        False           :   Commands are NOT installed, and the extension
+            False       :   Commands are NOT installed, and the extension
                             is inactive.
         '''
 
@@ -172,15 +192,25 @@ class MqttExt():
 
     # connect to a broker
     def connect_(self, cname=defaultName, **kwargs):
+        '''
+        Create a connection object and establish a connection to a broker.
+
+            Args:
+                cname       : The name of the connection
+                **kwargs    : A dict with all of the required parameters
+            Returns:
+                The return value. True for success, False otherwise.
+        '''
+
         debugMsg(MODNAME, 'mqtt:connect:',kwargs, type(kwargs))
 
         # check the format of the connectionname
         if not checkFileName(cname):
-            return retError(self.__api, MODNAME, 'invalid name:'+cname)
+            return retError(self.__api, MODNAME, 'invalid name:'+cname, False)
 
         # check for duplicate connection names
         if cname in self.__conns.keys():
-            return retError(self.__api, MODNAME, 'name already used:'+cname)
+            return retError(self.__api, MODNAME, 'name already used:'+cname, False)
 
         m = MqttConnection(cname, self.__api)
         if m != None:
@@ -189,10 +219,20 @@ class MqttExt():
 
     # drop a broker
     def disconnect_(self, cname=defaultName):
+        '''
+        Closes an open connection to a broker, and removes the connection
+        from the table.
+
+            Args:
+                cname:      The name of the connection to remove
+            Returns:
+                The return value. True for success, False otherwise.
+        '''
+
         debugMsg(MODNAME, "mqtt disconnect")
 
         if cname not in self.__conns.keys():
-            return retError(self.__api, MODNAME, 'name not found:'+cname)
+            return retError(self.__api, MODNAME, 'name not found:'+cname, False)
 
         self.__conns[cname].disconnect_()
         del self.__conns[cname]
@@ -200,7 +240,17 @@ class MqttExt():
 
     # list the active connections
     def listConns_(self):
-        ''' Return a list of current connection names '''
+        '''
+        Return a list[] of open connections.
+
+            Args:
+                None
+            Returns:
+                A list[] of active connections.  The list may be empty if
+                there are no connections.
+
+                None if there was an error.
+        '''
         return list(self.__conns.keys())
 
     # subscribe to a topic
@@ -208,7 +258,7 @@ class MqttExt():
         debugMsg(MODNAME, 'mqtt:sub:',  cname,  topic)
 
         if cname not in self.__conns.keys():
-            return retError(self.__api, MODNAME, 'name not found:'+cname)
+            return retError(self.__api, MODNAME, 'name not found:'+cname, False)
 
         return self.__conns[cname].subtopic_(topic, handler, qos)
 
@@ -216,7 +266,7 @@ class MqttExt():
     def unsubtopic_(self, cname=defaultName, topic=None):
 
         if cname not in self.__conns.keys():
-            return retError(self.__api, MODNAME, 'name not found:'+cname)
+            return retError(self.__api, MODNAME, 'name not found:'+cname, False)
 
         return self.__conns[cname].unsubtopic_(topic)
 
@@ -224,7 +274,7 @@ class MqttExt():
     def isrunning_(self, cname=defaultName):
 
         if cname not in self.__conns.keys():
-            return retError(self.__api, MODNAME, 'name not found:'+cname)
+            return retError(self.__api, MODNAME, 'name not found:'+cname, False)
 
         return self.__conns[cname].isrunning_()
 
@@ -232,7 +282,7 @@ class MqttExt():
     def waiting_(self, cname=defaultName):
 
         if cname not in self.__conns.keys():
-            return retError(self.__api, MODNAME, 'name not found:'+cname)
+            return retError(self.__api, MODNAME, 'name not found:'+cname, False)
 
         return self.__conns[cname].waiting_()
 
@@ -241,7 +291,7 @@ class MqttExt():
         debugMsg(MODNAME, "mqtt read:", cname)
 
         if cname not in self.__conns.keys():
-            return retError(self.__api, MODNAME, 'name not found:'+cname)
+            return retError(self.__api, MODNAME, 'name not found:'+cname, False)
 
         return self.__conns[cname].readmsg_(blocking, timeout)
 
@@ -249,7 +299,7 @@ class MqttExt():
     def sendmsg_(self, cname=defaultName, dest=None, data=None):
 
         if cname not in self.__conns.keys():
-            return retError(self.__api, MODNAME, 'name not found:'+cname)
+            return retError(self.__api, MODNAME, 'name not found:'+cname, False)
 
         return self.__conns[cname].sendmsg_(dest, data)
 

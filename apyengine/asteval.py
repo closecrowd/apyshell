@@ -1,22 +1,24 @@
-
-  #!/usr/bin/env python3
+#!/usr/bin/env python3
 """Safe(ish) evaluation of mathematical expression using Python's ast
 module.
 
-Extensively modified by Mark Anacker closecrowd@pm.me
+Extensively modified by Mark Anacker <closecrowd@pm.me>
 
 Forked from:
 https://github.com/newville/asteval
 
 This module provides an Interpreter class that compiles a restricted set of
 Python expressions and statements to Python's AST representation, and then
-executes that representation using values held in a symbol table.
+executes that representation using values held in a symbol table.  It is
+meant to be instanciated by the ApyEngine class in apyengine.py.
 
 The symbol table is a simple dictionary, giving a simple, flat namespace.
 This comes pre-loaded with many functions from Python's builtin and math
 module.  If numpy is installed, many numpy functions are also included.
 Additional symbols can be added when an Interpreter is created, but the
 user of that interpreter will not be able to import additional modules.
+Access to the symbol table is protected by a mutex, allowing multiple
+threads to access the global state without interfering with each other.
 
 Expressions, including loops, conditionals, and function definitions can be
 compiled into ast node and then evaluated later, using the current values
@@ -27,28 +29,32 @@ safer than 'eval' because many unsafe operations (such as 'import' and
 'eval') are simply not allowed.
 
 Many parts of Python syntax are supported, including:
-     for loops, while loops, if-then-elif-else conditionals
-     try-except (including 'finally')
-     function definitions with def
-     advanced slicing:    a[::-1], array[-3:, :, ::2]
-     if-expressions:      out = one_thing if TEST else other
-     list comprehension   out = [sqrt(i) for i in values]
+    * for loops, while loops, if-then-elif-else conditionals
+    * try-except (including 'finally')
+    * function definitions with def
+    * advanced slicing:    a[::-1], array[-3:, :, ::2]
+    * if-expressions:      out = one_thing if TEST else other
+    * list comprehension   out = [sqrt(i) for i in values]
 
 The following Python syntax elements are not supported:
-     Import, Exec, Lambda, Class, Global, Generators,
-     Yield, Decorators
+     Import, Exec, Lambda, Class, Global, Generators, Yield, Decorators
 
 In addition, while many builtin functions are supported, several builtin
 functions that are considered unsafe are missing ('eval', 'exec', and
 'getattr' for example)
 
-   version: 0.9.13
-   last update: 2018-Sept-29
-   License:  MIT
-   Author:  Matthew Newville <newville@cars.uchicago.edu>
-            Center for Advanced Radiation Sources,
-            The University of Chicago
---------------------------------------------------------------------
+Credits:
+   * version: 1.0
+   * last update: 2018-Sept-29
+   * License:  MIT
+   * Author:  Mark Anacker <closecrowd@pm.me>
+   * Copyright (c) 2023 by Mark Anacker
+
+Note:
+   * Based on: asteval 0.9.13    <https://github.com/newville/asteval>
+   * Originally by: Matthew Newville, Center for Advanced Radiation Sources,
+     The University of Chicago, <newville@cars.uchicago.edu>
+
 """
 
 from __future__ import division, print_function
@@ -58,7 +64,6 @@ import ast
 import time
 import inspect
 from sys import exc_info, stdout, stderr, version_info
-#import six
 
 from threading import RLock
 
@@ -98,39 +103,42 @@ raise_errors = True
 
 
 class Interpreter(object):
-    """create an asteval Interpreter: a restricted, simplified interpreter
-    of mathematical expressions using Python syntax.
+    """Create an instance of the asteval Interpreter.
 
-    Parameters
-    ----------
-    symtable : dict or `None`
-        dictionary to use as symbol table (if `None`, one will be created).
-    usersyms : dict or `None`
-        dictionary of user-defined symbols to add to symbol table.
-    writer : file-like or `None`
-        callable file-like object where standard output will be sent.
-    err_writer : file-like or `None`
-        callable file-like object where standard error will be sent.
+    This is the main class in this file.
 
-    readonly_symbols : iterable or `None`
-        symbols that the user can not assign to
-    builtins_readonly : bool
-        whether to blacklist all symbols that are in the initial symtable
-    global_funcs : bool
-        whether to make def use the global symbol table
-    max_statement_length : int
-        Maximum length of a script statement
-    no_print : bool
-        disable print() output if True
-
-    Notes
-    -----
     """
 
     def __init__(self, symtable=None, usersyms=None, writer=None,
                  err_writer=None, readonly_symbols=None, builtins_readonly=True,
                  global_funcs=False, max_statement_length=50000, no_print=False,
                  raise_errors=False):
+
+        """Create an asteval Interpreter.
+
+        This is a restricted, simplified interpreter using Python syntax.  This
+        is meant to be called from the ApyEngine class in apyengine.py.
+
+            Args:
+                symtable : dictionary to use as symbol table (if `None`, one will be created).
+
+                usersyms : dictionary of user-defined symbols to add to symbol table.
+
+                writer : callable file-like object where standard output will be sent.
+
+                err_writer : callable file-like object where standard error will be sent.
+
+                readonly_symbols : symbols that the user can not assign to
+
+                builtins_readonly : whether to blacklist all symbols that are in the initial symtable
+
+                global_funcs : whether to make procs use the global symbol table
+
+                max_statement_length : Maximum length of a script statement
+
+                no_print : disable print() output if True
+
+        """
 
         self.writer = writer or stdout
         self.err_writer = err_writer or stderr
@@ -190,16 +198,23 @@ class Interpreter(object):
 
     # stop a running script as soon as possible
     def abortrun(self):
+        """Terminate execution of a script.
+
+        Sets a flag that causes the currently-running script to exit
+        as quickly as possible.
+
         """
-            terminate execution
-        """
+
         self.abort = True
 
     def remove_nodehandler(self, node):
-        """remove support for a node
-        returns current node handler, so that it
-        might be re-added with add_nodehandler()
+        """Remove support for a node.
+
+        Returns current node handler, so that it might be re-added
+        with add_nodehandler()
+
         """
+
         out = None
         if node in self.node_handlers:
             out = self.node_handlers.pop(node)
@@ -214,8 +229,18 @@ class Interpreter(object):
     # of installable modules.  This is NOT the
     # extension loader.
     def install(self, modname):
-        """install a pre-authorized Python module.  This is
-        called by the install_() handler in apyengine.py
+        """Install a pre-authorized Python module into the engine's symbol table.
+
+        This is callable from a script with the 'install_()' command.  Only modules
+        in the MODULE_LIST list in astutils.py can be installed.  Once installed,
+        they can not be uninstalled during this run of apyshell.
+
+        This is called by the install_() function in apyengine.py
+
+            Args:
+                modname :   The module name to install
+            Returns:
+                The return value. True for success, False otherwise.
         """
 
         global symlock
@@ -224,6 +249,7 @@ class Interpreter(object):
             return False
 
         with symlock:
+            # call the function in astutils.py to add the module
             rv = install_python_module(self.symtable, modname, self.modlist)
 
         # set a flag if we instaled numpy
@@ -235,16 +261,17 @@ class Interpreter(object):
         return rv
 
     def user_defined_symbols(self):
-        """ Return a set of symbols that have been added to symtable after
+        """Return a set of symbols that have been added to symtable after
         construction.
 
         I.e., the symbols from self.symtable that are not in
         self.no_deepcopy.
 
-        Returns
-        -------
-        unique_symbols : set
-            symbols in symtable that are not in self.no_deepcopy
+            Args:
+                None
+            Returns:
+                A set of symbols in symtable that are not in self.no_deepcopy
+
         """
 
         global symlock
@@ -256,6 +283,19 @@ class Interpreter(object):
         return unique_symbols
 
     def isReadOnly(self, varname):
+        """See if a script variable name is marked read-only
+
+        Script variables may be marked as read-only.  This will
+        test that status.
+
+            Args:
+                varnam  :   The name of the variable
+            Return:
+                True is it's read-only
+                False if it's read-write
+
+        """
+
         if varname in self.readonly_symbols:
             return True
         return False
@@ -295,14 +335,12 @@ class Interpreter(object):
     def unimplemented(self, node):
         """Unimplemented nodes."""
         self.raise_exception(node, exc=NotImplementedError,
-                             msg="'%s' not supported" %
+                             msg="'%s' is not supported" %
                              (node.__class__.__name__))
 
     def raise_exception(self, node, exc=None, msg='', expr=None,
                         lineno=0):
         global symlock
-
-#        print('raise_exception:', node, exc, msg, expr, lineno)
 
         ml = len(msg)
 
@@ -314,32 +352,22 @@ class Interpreter(object):
         if len(self.error) > 0 and not isinstance(node, ast.Module):
             msg = '%s' % msg
 
-#        if not node:
-#            lineno = 0
-#        else:
         if node:
             if not isinstance(node, ast.Module):
                 lineno = int(node.lineno)
 
         err = ExceptionHolder(node, exc=exc, msg=msg, expr=expr, lineno=lineno)
-#        self._interrupt = ast.Break()
         self._interrupt = ast.Raise()
         self.error.append(err)
 
-        #if self.error_msg is None:
-        #    self.error_msg = (' '.join([msg, "at expr='%s'" % (self.expr)]))
         if len(msg) > 0:
             self.error_msg = msg
-
-#        print('raise_exception:', self.error_msg, lineno, ml)
 
         if lineno != 0 and ml > 0:
             self.error_msg = self.error_msg + ' at line '+str(lineno)
 
             with symlock:
                 self.symtable['errline_'] = int(lineno)
-
-#        print('raise_exception:', self.error_msg)
 
         if exc is None:
             try:
@@ -348,7 +376,6 @@ class Interpreter(object):
                 exc = RuntimeError
 
         self.error[0].msg = self.error_msg
-#        print('exc:', exc, self.error_msg)
         raise exc(self.error_msg)
 
     # main entry point for Ast node evaluation
@@ -373,10 +400,9 @@ class Interpreter(object):
 
     def run(self, node, expr=None, lineno=None, with_raise=True):
         """Execute parsed Ast representation for an expression."""
+
         # Note: keep the 'node is None' test: internal code here may run
         #    run(None) and expect a None in return.
-
-#        print('run:', node, expr, lineno, with_raise)
 
         if self.abort:
             self.raise_exception(node, expr=None, msg='execution aborted')
@@ -405,8 +431,6 @@ class Interpreter(object):
         except KeyError:
             return self.unimplemented(node)
 
-#        print('handler:', handler)
-
         # run the handler:  this will likely generate
         # recursive calls into this run method.
         try:
@@ -416,19 +440,19 @@ class Interpreter(object):
                 ret = handler(node)
             if isinstance(ret, enumerate):
                 ret = list(ret)
-#            print('ret:', ret)
             return ret
         except:
             if with_raise:
-#                print('with raise:', node, expr)
                 self.raise_exception(node, expr=expr)
 
     def __call__(self, expr, **kw):
         """Call class instance as function."""
+
         return self.eval(expr, **kw)
 
     def eval(self, expr, lineno=0, show_errors=True):
         """Evaluate a single statement."""
+
         self.lineno = lineno
         self.error = []
         self.start_time = time.time()
@@ -476,6 +500,7 @@ class Interpreter(object):
     @staticmethod
     def dump(node, **kw):
         """Simple ast dumper."""
+
         return ast.dump(node, **kw)
 
 
@@ -484,6 +509,7 @@ class Interpreter(object):
 
     def on_expr(self, node):
         """Expression."""
+
         return self.run(node.value)  # ('value',)
 
     def on_index(self, node):
@@ -586,10 +612,6 @@ class Interpreter(object):
                 else:
                     msg = "name '%s' is not defined" % node.id
                     self.raise_exception(node, exc=NameError, msg=msg)
-
-    def on_nameconstant(self, node):
-        """True, False, or None"""
-        return node.value
 
     def node_assign(self, node, val):
         """Assign a value (not the node.value object) to a node.
@@ -880,7 +902,7 @@ class Interpreter(object):
 
         for tnode in node.generators:
             if tnode.__class__ == ast.comprehension:
-                tlist = []
+#                tlist = []
                 ttype = 'name'
                 if tnode.target.__class__ == ast.Name:
                     if (not valid_symbol_name(tnode.target.id) or
@@ -1093,11 +1115,6 @@ class Interpreter(object):
         if node.name in self.no_deepcopy:
             self.no_deepcopy.remove(node.name)
 
-    def on_constant(self, node):    # ('test', 'msg')
-        """constants."""
-        return node.value
-
-
 # ----------------------------------------------------------------------------
 #
 # Procedure class - def functions are evaluated here
@@ -1105,7 +1122,7 @@ class Interpreter(object):
 # ----------------------------------------------------------------------------
 
 class Procedure(object):
-    """Procedure: user-defined function for asteval.
+    """Procedure - user-defined function for asteval.
 
     This stores the parsed ast nodes as from the 'functiondef' ast node
     for later evaluation.
@@ -1253,7 +1270,7 @@ class Procedure(object):
         # add the function arguments to the global table
         try:
             with symlock:
-                save_symtable = self.__asteval__.symtable.copy()
+#                save_symtable = self.__asteval__.symtable.copy()
                 self.__asteval__.symtable.update(symlocals)
         except Exception as ex:
             if not self.no_print:

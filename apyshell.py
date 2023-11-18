@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""
-    apyshell - Python Embedded apy runnner
+"""apyshell - Python Embedded apy script runnner
 
-    This script creates a framework for running lightweight
-    scripts under the apyengine interpreter.  It demonstrates
-    embedding and controlling the engine.  It can be run either
-    stand-alone, or embedded into an application.
+This script creates a framework for running lightweight scripts
+under the apyengine interpreter.  It demonstrates embedding and
+controlling the engine.  It can be run either stand-alone, or
+itself embedded into an application.
 
-    version: 1.0
-    last update: 2023-Nov-13
-    License:  MIT
-    Author:  Mark Anacker <closecrowd@pm.me>
-    Copyright (c) 2023 by Mark Anacker
---------------------------------------------------------------------
+Credits:
+    * version: 1.0
+    * last update: 2023-Nov-17
+    * License:  MIT
+    * Author:  Mark Anacker <closecrowd@pm.me>
+    * Copyright (c) 2023 by Mark Anacker
+
 """
 
 import os
@@ -50,6 +50,9 @@ extension_opts = {  'allow_redis_cmds':True, 'allow_system':True,
 # ----------------------------------------------------------------------------
 
 def usage():
+    """Help message.
+    """
+
     print("""
     apyshell.py script [ options ]
 
@@ -60,7 +63,7 @@ def usage():
     -i, --initscript    A script to execute before the specified script
     -b, --basedir       Base directory for scripts (use , for multiple paths)
     -e, --extensiondir  Base directory for extensions (use , for multiple paths)
-    -p, --pidfile       A file with the shell's current PID
+    -p, --pidfile       Write a file with the shell's current PID
     -g, --global        All script variables are global
     -v, --verbose       Debug output
 
@@ -70,6 +73,14 @@ def usage():
 # note: this doesn't do any checking of the file path.
 # take care if running under root
 def savepid(pfile):
+    """Save our current PID if we can.
+
+    Note:
+        this doesn't do any checking of the file path. Take care if
+        running under root.
+
+    """
+
     mypid = os.getpid()
     try:
         file = open(pfile, "w")
@@ -85,6 +96,17 @@ def savepid(pfile):
 #
 def apyshell(script, basedir=basedir, extensiondir=extensiondir,
                 extension_opts=None, args=None, initscript=None, globals=False ):
+    """Execute a script file under anyengine.
+
+    This is the main entry point.
+
+        Args:
+            script  :   The .apy script to execute.
+        Returns:
+            The return value. True for success, False otherwise.
+
+
+    """
 
     if not script:
         return False
@@ -118,6 +140,7 @@ def apyshell(script, basedir=basedir, extensiondir=extensiondir,
 
     # create the extension manager
     emgr = ExtensionMgr(engine, extensiondir, extension_opts)
+    # register it's commands
     emgr.register()
 
     # pass any args to the scripts
@@ -127,7 +150,7 @@ def apyshell(script, basedir=basedir, extensiondir=extensiondir,
     # pass in the name of this machine
     engine.setSysVar_('hostname',  platform.node())
 
-    # load the option init script
+    # load the optional init script (if any)
     if initscript:
         engine.loadScript_(initscript)
 

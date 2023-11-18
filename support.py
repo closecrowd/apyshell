@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-"""
-    support - Various stand-alone support functions for apyshell
+"""support - Various stand-alone support functions for apyshell.
 
-    version: 1.0
-    last update: 2023-Nov-13
-    License:  MIT
-    Author:  Mark Anacker <closecrowd@pm.me>
-    Copyright (c) 2023 by Mark Anacker
---------------------------------------------------------------------
+This file contains various utility functions used by apyshell.
+
+Credits:
+    * version: 1.0
+    * last update: 2023-Nov-13
+    * License:  MIT
+    * Author:  Mark Anacker <closecrowd@pm.me>
+    * Copyright (c) 2023 by Mark Anacker
+
 """
 
 import sys
@@ -30,6 +32,8 @@ debug = False
 
 ##############################################################################
 
+#print('support')
+
 def enableDebug(arg):
     global debug
     if arg:
@@ -49,6 +53,19 @@ def errorMsg(source='', *args):
 # return True if the string contains only a-zA-Z0-9-_
 # Used as a valid string check on script-supplied file names
 def checkFileName(fname):
+    """Check a file name
+
+    Checks the given filename for characters in the set
+    of a-z, A-Z, _ or -
+
+        Args:
+            fname   :   The name to check
+        Returns:
+            True if the name is entirely in that set
+            False if there were invalid char(s)
+
+    """
+
     if not fname or len(fname) < 1:
         return False
 
@@ -57,6 +74,17 @@ def checkFileName(fname):
 # clean off unwanted path elements
 # Linux-specific for now
 def sanitizePath(path):
+    """Clean a path.
+
+    Remove dangerous characters from a path string.
+
+        Args:
+            path    :   The strin with the path to clean
+        Returns:
+            The cleaned path or None if there was a problem
+
+    """
+
     if not path or len(path) < 1:
         return None
 
@@ -88,14 +116,16 @@ def sanitizePath(path):
     return path
 
 # log an error and return
-def retError(api, module, msg, ret=None):
+def retError(api, module, msg, ret=False):
     if api != None:
         api.logError(module, msg)
     else:
         print(module, msg)
-    if ret:
-        return ret
-    return False
+    # if the return is None, return that
+    if not ret:
+        return None
+    # otherwise, return the True/False value
+    return ret
 
 # unlock a thread lock
 def unlock__(lock):
