@@ -1,31 +1,32 @@
 #!/usr/bin/env python3
-"""
-    fileext - file handling extension
+"""fileext - file handling extension.
 
-    This extension prvides some simple text file handling.  It
-    limits the file locations to a pre-set root directory.
+This extension provides some simple text file handling.  It
+limits the file locations to a pre-set root directory.
 
-    Make these functions available to a script by adding:
+Make these functions available to a script by adding:
 
-        loadExtension_('fileext')
+    loadExtension_('fileext')
 
-    to it.  Functions exported by this extension:
+to it.  Functions exported by this extension:
 
-        readLines_()    :   read a text file line-by-line or all-at-once
-        writeLines_()   :   write a line (or lines) to a text file,
-                            creating the file if need be. *
-        appendLines_()  :   write a line (or lines) to the end of a text
-                            file, extending it. *
-        listFiles_()        return a list of files in the given path *
+Methods:
+    readLines_()    :   read a text file line-by-line or all-at-once
+    writeLines_()   :   write a line (or lines) to a text file,
+                        creating the file if need be. *
+    appendLines_()  :   write a line (or lines) to the end of a text
+                        file, extending it. *
+    listFiles_()    :   return a list of files in the given path *
 
-    * may be disabled by option settings
+* may be disabled by option settings
 
-    version: 1.0
-    last update: 2023-Nov-13
-    License:  MIT
-    Author:  Mark Anacker <closecrowd@pm.me>
-    Copyright (c) 2023 by Mark Anacker
---------------------------------------------------------------------
+Credits:
+    * version: 1.0
+    * last update: 2023-Nov-13
+    * License:  MIT
+    * Author:  Mark Anacker <closecrowd@pm.me>
+    * Copyright (c) 2023 by Mark Anacker
+
 """
 
 modready = True
@@ -55,23 +56,30 @@ MODNAME = "fileext"
 # ----------------------------------------------------------------------------
 
 class FileExt():
-
-    ''' This class manages commands to read and write files. '''
+    """This class manages commands to read and write files."""
 
     def __init__(self, api, options={}):
-        '''
-        Parameters
-        ----------
-        api     : an instance of ExtensionAPI connecting us to the engine
-        options : a dict of option settings passed down to the extension
+        """Constructs an instance of the FileExt class.
 
-            Defined options:    'file_root' - a path prepended to all
-                                  filenames, restricting access to files
-                                  below this point.
-                                'read_only' = If True,  the writeLines_ and
-                                  appendLines_ commands are not installed.
-                                'list_dirs' - If True, allows the list_dirs_ call
-        '''
+        This instance will manage all named queues.  There will be only
+        one of these instances at a time.
+
+        Args:
+            api     : an instance of ExtensionAPI connecting us to the engine
+
+            options : a dict of option settings passed down to the extension
+
+        Options:
+                    'file_root' - a path prepended to all
+                                filenames, restricting access to files
+                                below this point.
+
+                    'read_only' = If True,  the writeLines_ and
+                              appendLines_ commands are not installed.
+
+                    'list_dirs' - If True, allows the list_dirs_ call
+
+        """
 
         self.__api = api
         self.__options = options
@@ -87,26 +95,32 @@ class FileExt():
             self.__listdirs = True
 
     def register(self):
-        ''' Make this extension's commands available to scripts
+        """Make this extension's functions available to scripts
 
-        Commands installed
-        ------------------
+        This method installs our script API methods as functions in the
+        engine symbol table, making them available to scripts.
 
-        readLines_()    :   read a text file line-by-line or all-at-once
-        writeLines_()   :   write a line (or lines) to a text file,
-                            creating the file if need be.
-        appendLines_()  :   write a line (or lines) to the end of a text
-                            file, extending it.
-        listFiles_()        return a list of files in the given path
+        Note:
+            Functions installed:
+                * readLines_()    :   read a text file line-by-line or all-at-once
+                * writeLines_()   :   write a line (or lines) to a text file,
+                                        creating the file if need be.
+                * appendLines_()  :   write a line (or lines) to the end of a text
+                                        file, extending it.
+                * listFiles_()    :   return a list of files in the given path
 
+        Args:
+            None
 
         Returns
-        -------
-        True            :   Commands are installed and the extension is
+            True        :   Commands are installed and the extension is
                             ready to use.
-        False           :   Commands are NOT installed, and the extension
+
+            False       :   Commands are NOT installed, and the extension
                             is inactive.
-        '''
+
+        """
+
         if not modready:
             return False
 
@@ -147,32 +161,35 @@ class FileExt():
 #
 
     def readLines_(self, filepath, handler=None, maxlines=0):
-        ''' Read data from a file in text mode
+        """Read data from a file in text mode.
 
-            Parameters
-            ----------
-            filepath    :   str, required
-                        filename (and optional path) to read from.
-                        Absolute (/) and parent (..) paths are not
-                        allowed.  Path will be under "file_root" if
-                        configured.
-            handler     :   str, optional
-                        The name of a script function that wll be
-                        called with every line of text.  The
-                        function will be called with a single str
-                        parameter containing the text line.  If the
-                        handler returns False, file reading is stopped.
-            maxlines    :   int, optional
-                        The number of lines to read before stopping.  If
-                        omitted or 0, read until the end of the file.
+        Read a text file all-at-once, or line by line.
 
-            Returns
-            -------
-            None            :   If there was an error opening the file
-            data            :   str     The lines from the file if no handler
-                                        was specified
-            count           :   int     The number of lines sent to the handler
-        '''
+            Args:
+                filepath    :   filename (and optional path) to read from.
+                                Absolute (/) and parent (..) paths are not
+                                allowed.  Path will be under "file_root" if
+                                configured.  Required.
+
+                handler     :   The name of a script function that wll be
+                                called with every line of text.  The
+                                function will be called with a single str
+                                parameter containing the text line.  If the
+                                handler returns False, file reading is stopped.
+                                Optional.
+
+                maxlines    :   The number of lines to read before stopping.  If
+                                omitted or 0, read until the end of the file.  Optional.
+
+            Returns:
+                None            :   If there was an error opening the file
+
+                data            :   str     The lines from the file if no handler
+                                            was specified
+
+                count           :   int     The number of lines sent to the handler
+
+        """
 
         fp = sanitizePath(filepath)
         if not fp:
@@ -206,35 +223,37 @@ class FileExt():
 
 
     def writeLines_(self, filepath, data, handler=None, maxlines=0):
-        ''' Write lines of data to a text file, overwriting any previous file
+        """Write lines of data to a text file, overwriting any previous file
 
-            Parameters
-            ----------
-            filepath    :   str, required
-                        filename (and optional path) to read from.
-                        Absolute (/) and parent (..) paths are not
-                        allowed.  Path will be under "file_root" if
-                        configured.
-            data        :   str | list, required
-                        A string to write to the file as a line of text,
-                        or a list[] of strings that will be written as
-                        multiple lines.
-            handler     :   str, optional
-                        The name of a script function that wll be
-                        called to obtain a line of text to be
-                        written to the file. If the handler returns
-                        False, file writing is stopped.
-            maxlines    :   int, optional
-                        The number of lines to write before stopping.  If
-                        omitted or 0, write until the data is exhausted..
+        Write to a text file all-at-once, or line by line.
 
-            Returns
-            -------
-            None    :   If there was an error opening the file
-            count   :   int     The number of lines sent to the
-                                handler, or the number of bytes sent if
-                                no handler.
-        '''
+            Args:
+                filepath    :   filename (and optional path) to read from.
+                                Absolute (/) and parent (..) paths are not
+                                allowed.  Path will be under "file_root" if
+                                configured.  Required.
+
+                data        :   A string to write to the file as a line of text,
+                                or a list[] of strings that will be written as
+                                multiple lines.  Required.
+
+                handler     :   The name of a script function that wll be
+                                called to obtain a line of text to be
+                                written to the file. If the handler returns
+                                False, file writing is stopped.  Optional.
+
+                maxlines    :   The number of lines to write before stopping.  If
+                                omitted or 0, write until the data is exhausted.
+                                Optional.
+
+            Returns:
+                None    :   If there was an error opening the file
+
+                count   :   int     The number of lines sent to the
+                                    handler, or the number of bytes sent if
+                                    no handler.
+
+        """
 
         fp = sanitizePath(filepath)
         if not fp:
@@ -248,35 +267,37 @@ class FileExt():
 
 
     def appendLines_(self, filepath, data, handler=None, maxlines=0):
-        ''' Write lines of data to a text file, appending to any previous file
+        """Write lines of data to a text file, appending to any previous file
 
-            Parameters
-            ----------
-            filepath    :   str, required
-                        filename (and optional path) to read from.
-                        Absolute (/) and parent (..) paths are not
-                        allowed.  Path will be under "file_root" if
-                        configured.
-            data        :   str | list, required
-                        A string to write to the file as a line of text,
-                        or a list[] of strings that will be written as
-                        multiple lines.
-            handler     :   str, optional
-                        The name of a script function that wll be
-                        called to obtain a line of text to be
-                        written to the file. If the handler returns
-                        False, file writing is stopped.
-            maxlines    :   int, optional
-                        The number of lines to write before stopping.  If
-                        omitted or 0, write until the data is exhausted..
+        Append lines to a text file all-at-once, or line by line.
 
-            Returns
-            -------
-            None    :   If there was an error writing to the file
-            count   :   int     The number of lines sent to the
-                                handler, or the number of bytes sent if
-                                no handler.
-        '''
+            Args:
+                filepath    :   filename (and optional path) to read from.
+                                Absolute (/) and parent (..) paths are not
+                                allowed.  Path will be under "file_root" if
+                                configured.  Required.
+
+                data        :   A string to write to the file as a line of text,
+                                or a list[] of strings that will be written as
+                                multiple lines.  Required.
+
+                handler     :   The name of a script function that wll be
+                                called to obtain a line of text to be
+                                written to the file. If the handler returns
+                                False, file writing is stopped.  Optional.
+
+                maxlines    :   The number of lines to write before stopping.  If
+                                omitted or 0, write until the data is exhausted.
+                                Optional.
+
+            Returns:
+                None    :   If there was an error writing to the file
+
+                count   :   int     The number of lines sent to the
+                                    handler, or the number of bytes sent if
+                                    no handler.
+
+        """
 
         fp = sanitizePath(filepath)
         if not fp:
@@ -289,7 +310,7 @@ class FileExt():
         return lineWriter(self.__api,  fp, data, handler=handler, maxlines=maxlines, mode='a')
 
     def listFiles_(self, filepath=''):
-        ''' return a list of files '''
+        """return a list of files """
 
         fp = sanitizePath(filepath)
 

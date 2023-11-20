@@ -1,30 +1,31 @@
 #!/usr/bin/env python3
-"""
-    utilext - utility functions
+"""utilext - utility functions.
 
-    This extension add a few useful functions callable by scripts.
-    Some of these functions may be disabled by options passed in
-    from apyshell.
+This extension adds a few useful functions callable by scripts.
+Some of these functions may be disabled by options passed in
+from apyshell.
 
-    Make these functions available to a script by adding:
+Make these functions available to a script by adding:
 
-        loadExtension_('utilext')
+    loadExtension_('utilext')
 
-    to it.  Functions exported by this extension:
+to it.  Functions exported by this extension:
 
-        input_()        :   read characters from the terminal, return
-                            as a string.
-        system_()       :   execute a string in the user's default shell. *
-        getenv_()       :   return the value of an environment variable. *
+Methods:
+    input_()        :   read characters from the terminal, return
+                        as a string.
+    system_()       :   execute a string in the user's default shell. *
+    getenv_()       :   return the value of an environment variable. *
 
-    * may be disabled by option settings
+* may be disabled by option settings
 
-    version: 1.0
-    last update: 2023-Nov-13
-    License:  MIT
-    Author:  Mark Anacker <closecrowd@pm.me>
-    Copyright (c) 2023 by Mark Anacker
---------------------------------------------------------------------
+Credits:
+    * version: 1.0
+    * last update: 2023-Nov-17
+    * License:  MIT
+    * Author:  Mark Anacker <closecrowd@pm.me>
+    * Copyright (c) 2023 by Mark Anacker
+
 """
 
 modready = True
@@ -56,24 +57,29 @@ MODNAME="utilext"
 # ----------------------------------------------------------------------------
 
 class UtilExt():
-
-    ''' This class manages utility commands. '''
+    """This class provides utility commands. """
 
     def __init__(self, api, options={}):
-        '''
-        Parameters
-        ----------
-        api     : an instance of ExtensionAPI connecting us to the engine
-        options : a dict of option settings passed down to the extension
+        """Constructs an instance of the UtilExt class.
 
-            Defined options:    'allow_system' - install the system_()
-                                command allowing the script to run
-                                commands in the system shell.
+        This instance supplies some useful functions.
 
-                                'allow_getenv' - install the getenv_()
-                                command to allow the script to read
-                                environment variables.
-        '''
+        Args:
+            api     : an instance of ExtensionAPI connecting us to the engine.
+
+            options : a dict of option settings passed down to the extension.
+
+        Returns:
+            None
+
+        Options:
+                    'allow_system' : install the system_() command allowing
+                        the script to run commands in the system shell.
+
+                    'allow_getenv' : install the getenv_() command to allow
+                        the script to read environment variables.
+
+        """
 
         self.__api = api
         self.__options = options
@@ -83,23 +89,26 @@ class UtilExt():
         self.envflag = options.get('allow_getenv', False)
 
     def register(self):
-        ''' Make this extension's commands available to scripts
+        """Make this extension's functions available to scripts.
 
-        Commands installed
-        ------------------
+        This method installs our script API methods as functions in the
+        engine symbol table, making them available to scripts.
 
-        input_()        :   read characters from the terminal, return
-                            as a string.
-        system_()       :   execute a string in the user's default shell.
-        getenv_()       :   return the value of an environment variable
+        Note:
+            Functions installed:
+                * input_()        :   read characters from the terminal, return as a string.
+                * system_()       :   execute a string in the user's default shell.
+                * getenv_()       :   return the value of an environment variable.
+
+        Args:
+            None
 
         Returns
-        -------
-        True            :   Commands are installed and the extension is
-                            ready to use.
-        False           :   Commands are NOT installed, and the extension
-                            is inactive.
-        '''
+            True        :   Commands are installed and the extension is ready to use.
+
+            False       :   Commands are NOT installed, and the extension is inactive.
+
+        """
 
         if not modready:
             return False
@@ -117,7 +126,8 @@ class UtilExt():
         return True
 
     def unregister(self):
-        ''' Remove this extension's commands '''
+        """Remove this extension's functions from the engine. """
+
         if not modready:
             return False
 
@@ -127,7 +137,12 @@ class UtilExt():
         return True
 
     def shutdown(self):
-        ''' Perform a graceful shutdown '''
+        """Perform a graceful shutdown.
+
+        This gets called by the extension manager just before
+        the extension is unloaded.
+
+        """
         return True
 
 #----------------------------------------------------------------------
@@ -138,6 +153,39 @@ class UtilExt():
 
     # timed input with defaults
     def input_(self, prompt=None, default=None, **kwargs):
+        """Get console input.
+
+        This function will (optionally) print a prompt on the console,
+        then wait for (and return) whatever the user types in.  A default
+        value may be set to be returned if nothing was entered.  A
+        timeout can also be set, either returning a default value or
+        raising an exception if the timeout expires without a console entry.
+
+        The timeout default value may be different from the input default.
+
+            Args:
+
+                prompt  :   The prompt to display on the console
+
+                default :   A value to return if there is no input
+
+                **kwargs    :   Various options:
+
+                                Options:
+                                    * timeout :   input timeout in seconds.
+
+                                    * todef   :   default value to return if the timeout expires.
+
+                                    * toraise :   If True, raise an Exception when the timeout expires.
+
+            Returns:
+                A string with the input (minus the trailing newline), or
+                a sepcified default value.
+
+            Raises:
+                Exception('Timed out')
+
+        """
 
         timeout = 0
         todef = None
@@ -164,10 +212,13 @@ class UtilExt():
         else:
             # timed out
             if toraise:
+                # raise an exception
                 raise Exception('Timed out')
             else:
+                # or return the TO default
                 ret = todef
 
+        # return a default value
         if not ret or len(ret) == 0:
             if default:
                 ret = default
@@ -176,16 +227,46 @@ class UtilExt():
 
 
     def system_(self, cmd):
-        ''' run a shell command - possibly dangerous. (definitely dangerous) '''
+        """Run a shell command - possibly dangerous. (definitely dangerous!).
+
+        This function simply runs whatever string is passed to it in the
+        host environment.  Useful for debugging or ad-hoc scripting, it
+        has to be deliberately enabled by the host application.
+
+            Args:
+
+                cmd :   A command to run.
+
+            Returns:
+
+                The output of the command.
+
+        """
+
         return os.system(cmd)
 
 
-    def getenv_(self,  name):
-        ''' Return an environment variable '''
+    def getenv_(self, name):
+        """Return an environment variable.
+
+        This function returns the value of an item in the host application's
+        environment.  Since this might be unsafe, it has to be specifically
+        enabled by the host application.
+
+            Args:
+
+                name    :   The environment variable to return
+
+            Returns:
+
+                The contents of the env variable, or None if it isn't valid.
+
+
+        """
         if not name:
             return None
 
-        return os.environ.get(name,  None)
+        return os.environ.get(name, None)
 
 #----------------------------------------------------------------------
 #

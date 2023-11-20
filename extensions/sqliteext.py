@@ -1,42 +1,44 @@
 #!/usr/bin/env python3
-"""
-    sqliteext - SQlite3 database functions
+"""sqliteext - SQlite3 database functions.
 
-    This extension allows a script to store and retrieve data from a
-    sqlite3 database.  The database files are stored under a directory
-    passed in via the "sql_root" option.
+This extension allows a script to store and retrieve data from a
+sqlite3 database.  The database files are stored under a directory
+passed in via the "sql_root" option.
 
-    Some basic knowledge of SqLite3 and SQL is helpful when using this
-    extension.
+Some basic knowledge of SqLite3 and SQL is helpful when using this
+extension.
 
-    All functions are mutex-protected, and can be used from multiple threads.
+All functions are mutex-protected, and can be used from multiple threads.
 
-    Make the functions available to a script by adding:
+Make the functions available to a script by adding:
 
-        loadExtension_('sqliteext')
+    loadExtension_('sqliteext')
 
-    to it.  Functions exported by this extension:
+to it.  Functions exported by this extension:
 
-            sql_open_()         :   Open a sqlite3 database, creating it if it
-                                    doesn't exist.
-            sql_close_()        :   Close an open connection.
-            sql_execute_()      :   Execute a SQL command in the open database.
-            sql_commit_()       :   Commit any pending transactions (in autocommit == False)
-            sql_rollback_()     :   Roll back any pending transactions
-            sql_changes_()      :   Return the number of rows recently altered
-            sql_cursor_fetch_() :   Return rows from a cursor after an execute_()
-            sql_list_()         :   Return a list[] of the active connection names
+Methods:
+        sql_open_()         :   Open a sqlite3 database, creating it if it
+                                doesn't exist.
+        sql_close_()        :   Close an open connection.
+        sql_execute_()      :   Execute a SQL command in the open database.
+        sql_commit_()       :   Commit any pending transactions (in autocommit == False)
+        sql_rollback_()     :   Roll back any pending transactions
+        sql_changes_()      :   Return the number of rows recently altered
+        sql_cursor_fetch_() :   Return rows from a cursor after an execute_()
+        sql_list_()         :   Return a list[] of the active connection names
 
+Note:
     Required Python modules:
 
         sqlite3
 
-    version: 1.0
-    last update: 2023-Nov-13
-    License:  MIT
-    Author:  Mark Anacker <closecrowd@pm.me>
-    Copyright (c) 2023 by Mark Anacker
---------------------------------------------------------------------
+Credits:
+    * version: 1.0
+    * last update: 2023-Nov-17
+    * License:  MIT
+    * Author:  Mark Anacker <closecrowd@pm.me>
+    * Copyright (c) 2023 by Mark Anacker
+
 """
 
 
@@ -73,17 +75,17 @@ MODNAME = "sqliteext"
 # ----------------------------------------------------------------------------
 
 class SqLiteExt():
-
-    ''' This class manages commands to use a sqlite3 database. '''
+    """This class manages commands to use a sqlite3 database."""
 
     def __init__(self, api, options={}):
-        '''
-        Constructs an instance of the SqLiteExt class.  This instance will manage
-        all connections to sqlite3 databases.  There will be only once of these
-        instances at a time.
+        """Constructs an instance of the SqLiteExt class.
+
+        This instance will manage all connections to sqlite3 databases.
+        There will be only one of these instances at a time.
 
         Args:
             api     : an instance of ExtensionAPI connecting us to the engine.
+
             options : a dict of option settings passed down to the extension.
 
         Returns:
@@ -92,32 +94,40 @@ class SqLiteExt():
         Attributes:
             __api           : An instance of ExtensionAPI passed by the host, used
                                 to call back into the engine.  Copied from api.
+
             __options       : A dict of options from the host that may or may not
                                 apply to this extension.  Copied from options.
 
+
             __cmddict       : Dispatch table of our script command names and their
                                 functions.
+
             __conns         : The table of active connections, indexed by name.
+
             __cmdsflag      : If True, install the "redis_cmd_()" function.  Set
                                 in the options dict passed in.
 
+
             sqlroot         : The path to prepend to database file names.
+
             sqlext          : The file extension to append to database file names.
 
             __locktimeout   : Timeout in seconds to wait for a mutex.
+
             __lock          : Thread-locking mutex.
 
-        Defined options:    'sql_root' - a path prepended to all
-                            database names, restricting access to
-                            db files below this point.
+        Options:
+                    'sql_root' : a path prepended to all database names,
+                        restricting access to db files below this point.
 
-                            'sql_ext' - filename extension to use for
-                            database files.  Defaults to '.db'
-        '''
+                    'sql_ext' : filename extension to use for database files.
+                        Defaults to '.db'
+
+        """
 
         self.__api = api
         self.__options = options
-        self.__cmddict = {}
+        self.__cmddict = {}     # a dict holding our script functions
 
         if options:
             self.sqlroot = options.get('sql_root', None)
@@ -126,26 +136,29 @@ class SqLiteExt():
             self.sqlroot = None
             self.sqlext = 'db'
 
-        self.__conns = {} # sqlite3 database objects
+        self.__conns = {}       # sqlite3 database connection names
+
+        self.__dbnames = {}     # a list of filenames in use
 
         self.__locktimeout = 5
         self.__lock = threading.Lock()
 
     def register(self):
-        ''' Make this extension's commands available to scripts
+        """Make this extension's functions available to scripts.
 
-        Commands installed
-        ------------------
+        This method installs our script API methods as functions in the
+        engine symbol table, making them available to scripts.
 
-            sql_open_()         :   Open a sqlite3 database, creating it if it
-                                    doesn't exist.
-            sql_close_()        :   Close an open connection.
-            sql_execute_()      :   Execute a SQL command in the open database.
-            sql_commit_()       :   Commit any pending transactions (in autocommit == False)
-            sql_rollback_()     :   Roll back any pending transactions
-            sql_changes_()      :   Return the number of rows recently altered
-            sql_cursor_fetch_() :   Return rows from a cursor after an execute_()
-            sql_list_()         :   Return a list[] of the active connection names
+        Note:
+            Functions installed:
+                * sql_open_()         :   Open a sqlite3 database, creating it if it doesn't exist.
+                * sql_close_()        :   Close an open connection.
+                * sql_execute_()      :   Execute a SQL command in the open database.
+                * sql_commit_()       :   Commit any pending transactions (if autocommit is False)
+                * sql_rollback_()     :   Roll back any pending transactions
+                * sql_changes_()      :   Return the number of rows recently altered
+                * sql_cursor_fetch_() :   Return rows from a cursor after an execute_()
+                * sql_list_()         :   Return a list[] of the active connection names
 
         Args:
             None
@@ -153,13 +166,16 @@ class SqLiteExt():
         Returns
             True        :   Commands are installed and the extension is
                             ready to use.
+
             False       :   Commands are NOT installed, and the extension
                             is inactive.
-        '''
+
+        """
 
         if not modready:
             return False
 
+        # Store our functions in the local dict
         self.__cmddict['sql_open_'] = self.sql_open_
         self.__cmddict['sql_close_'] = self.sql_close_
         self.__cmddict['sql_execute_'] = self.sql_execute_
@@ -170,22 +186,29 @@ class SqLiteExt():
 
         self.__cmddict['sql_list_'] = self.sql_list_
 
+        # call the engine to add them
         self.__api.registerCmds(self.__cmddict)
 
         return True
 
     def unregister(self):
-        ''' Remove this extension's commands '''
+        """Remove this extension's functions from the engine. """
+
         if not modready:
             return False
 
-        # unregister the extensions script functions
+        # call the engine to remove the script functions
         self.__api.unregisterCmds(self.__cmddict)
 
         return True
 
     def shutdown(self):
-        ''' Perform a graceful shutdown '''
+        """Perform a graceful shutdown.
+
+        Close all of the active database connections.  This gets called
+        by the extension manager just before the extension is unloaded.
+
+        """
         for cname in self.__conns.keys():
             self.__conns[cname].sql_close_(cname)
         return True
@@ -198,16 +221,35 @@ class SqLiteExt():
 
     # open the db
     def sql_open_(self, cname, dbname, **kwargs):
-        ''' Open a connection to a sqllite3 database file, creating the files
-            if it doesn't exist.  The connection name and the database filename
-            do not have to be the same.
+        """Handles the sql_open_() function.
 
-            Options supported:
-                    autocommit          : If True, write the changes to the file after
-                                          every change. Default=True
-                    check_same_thread   : If True, restrict callers to a single thread.
-                                          Default=False
-        '''
+        Open a connection to a sqllite3 database file, creating the files
+        if it doesn't exist.  The connection name and the database filename
+        do not have to be the same.
+
+        A check is made to make sure the database filename  isn't already in use
+        by another connection.  It's probably not a good idea to have the same
+        file accessed by multiple connections simultaneously.  That's not the same
+        as calling this extension from multiple threads (which is supported).
+
+            Args:
+                cname       :   The connection name to use. Must not be in use.
+
+                dbname      :   The Sqlite3 database file to use.
+
+                **kwargs    :   Options to pass down to sqlite3.
+
+            Returns:
+                True if the database was opened.
+
+                False if an error occurred.
+
+            Options:
+                    autocommit          : If True, write the changes to the file after every change. Default=True.
+
+                    check_same_thread   : If True, restrict callers to a single thread. Default=False.
+
+        """
 
         dbpath = ''
         try:
@@ -227,17 +269,27 @@ class SqLiteExt():
                 unlock__(self.__lock)
                 return retError(self.__api, MODNAME, 'name already used:'+cname, False)
 
+            # make sure we don't open the same file more than once
+            if dbname in self.__dbnames:
+                unlock__(self.__lock)
+                return retError(self.__api, MODNAME, 'database already opened:'+dbname, False)
+
             # add a root path prefix if configured
             if self.sqlroot:
                 dbpath = self.sqlroot+'/'
             # and add the extension
             dbpath = dbpath+dbname+'.'+self.sqlext
 
-            m = SqlLiteConnection(cname,  self.__api)
+            # create a connection object
+            m = SqlLiteConnection(cname, dbname, self.__api)
             if m != None:
+                # and try to open it
                 cflag = m.sql_open_(dbpath, **kwargs)
                 if cflag == True:
+                    # save the connection name
                     self.__conns[cname] = m
+                    # and the database file name
+                    self.__dbnames[dbname] = cname
                     unlock__(self.__lock)
                     return True
                 else:
@@ -251,14 +303,17 @@ class SqLiteExt():
 
     # close the db
     def sql_close_(self, cname):
-        '''
+        """Handles the sql_close_() function.
+
         Close an open db connection and remove the connection from the table.
 
             Args:
-                cname:      The name of the connection to remove
+                cname   :   The name of the connection to remove.
+
             Returns:
                 The return value. True for success, False otherwise.
-        '''
+
+        """
 
         try:
             if not self.__lock.acquire(blocking=True, timeout=self.__locktimeout):
@@ -268,8 +323,16 @@ class SqLiteExt():
                 unlock__(self.__lock)
                 return retError(self.__api, MODNAME, 'name not found:'+cname, False)
 
+            # get the dbname from the connection
+            dbname = self.__conns[cname].sql_get_dbname_()
+            # close the database
             self.__conns[cname].sql_close_()
+            # remove it from the table
             del self.__conns[cname]
+            # if the dbname is in the name table
+            if dbname in self.__dbnames:
+                # remove it
+                del self.__dbnames[dbname]
             unlock__(self.__lock)
         except Exception as e:
             unlock__(self.__lock)
@@ -277,7 +340,25 @@ class SqLiteExt():
         return True
 
     def sql_execute_(self, cname, sql, *args, **kwargs):
-        ''' Execute a SQL statement in an open db '''
+        """Handles the sql_execute_() function.
+
+        Execute a SQL statement in an open db.
+
+            Args:
+                cname       :   The connection name to use.
+
+                sql         :   The SQL statement to execute.
+
+                *args       :   Values to substitute in the above SQL (if any).
+
+                **kwargs    :   Options to pass down to sqlite3.
+
+            Returns:
+                A cursor reference if successful.
+
+                None if there was an error.
+
+        """
 
         if cname not in self.__conns.keys():
             return retError(self.__api, MODNAME, 'name not found:'+cname, None)
@@ -285,7 +366,18 @@ class SqLiteExt():
         return self.__conns[cname].sql_execute_(sql, *args, **kwargs)
 
     def sql_commit_(self, cname):
-        ''' Commit pending updates '''
+        """Handles the sql_commit_() function.
+
+        Commit pending updates to the database.  If autocommit is True,
+        this function has no effect.
+
+            Args:
+                cname   :   The name of the connection to commit.
+
+            Returns:
+                The return value. True for success, False otherwise.
+
+        """
 
         if cname not in self.__conns.keys():
             return retError(self.__api, MODNAME, 'name not found:'+cname, False)
@@ -293,7 +385,22 @@ class SqLiteExt():
         return self.__conns[cname].sql_commit_()
 
     def sql_rollback_(self, cname):
-        ''' Undo pending changes '''
+        """Handles the sql_rollback_() function.
+
+        Rollback pending changes.
+
+        If autocommit is False, updates to the database are held in a buffer
+        until sql_commit_() is called.  This function clears that buffer,
+        effectively reverting changes back to the last sql_commit_().  If
+        autocommit is True, this function has no effect.
+
+            Args:
+                cname   :   The name of the connection to use.
+
+            Returns:
+                The return value. True for success, False otherwise.
+
+        """
 
         if cname not in self.__conns.keys():
             return retError(self.__api, MODNAME, 'name not found:'+cname, False)
@@ -301,7 +408,20 @@ class SqLiteExt():
         return self.__conns[cname].sql_rollback_()
 
     def sql_changes_(self, cname):
-        ''' Return the number of recent updates '''
+        """Handles the sql_cursor_fetch_() function.
+
+       Returns the number of changes to the database since it was last
+       opened.
+
+            Args:
+                cname   :   The name of the connection to use.
+
+            Returns:
+                The number of updates in this session.
+
+                -1 if there was an error.
+
+      """
 
         if cname not in self.__conns.keys():
             return retError(self.__api, MODNAME, 'name not found:'+cname, -1)
@@ -309,7 +429,25 @@ class SqLiteExt():
         return self.__conns[cname].sql_changes_()
 
     def sql_cursor_fetch_(self, cname, cursor, count=0):
-        ''' Return a cursor from the last execute_() '''
+        """Handles the sql_cursor_fetch_() function.
+
+        Return one or many rows from the supplied cursor (returned by sql_execute_()).
+
+            Args:
+                cname   :   The name of the connection to use.
+
+                cursor  :   The cursor reference returned by sql_execute_().
+
+                count   :   The number of rows to return.
+
+                                * -1 = get the next row as a tuple.
+                                * 0 = get all the rows as a list of tuples.
+                                * >0 = gets all rows <n> at a time as a list of tuples.
+
+            Returns:
+                The requested number of rows, None if an error occurred.
+
+        """
 
         if cname not in self.__conns.keys():
             return retError(self.__api, MODNAME, 'name not found:'+cname, None)
@@ -318,17 +456,19 @@ class SqLiteExt():
 
 
     def sql_list_(self):
-        ''''
-        Return a list[] of open connections.
+        """Handles the sql_list_() function.
+
+        Returns a list with the names of all current connections.
 
             Args:
                 None
+
             Returns:
                 A list[] of active connections.  The list may be empty if
                 there are no connections.
 
                 None if there was an error.
-        '''
+        """
 
         ret = None
         try:
@@ -351,33 +491,58 @@ class SqLiteExt():
 #----------------------------------------------------------------------
 
 class SqlLiteConnection():
-    '''
+    """
         This class represents a connection to a sqlite3 database.  There can be
         several connections active simultaneously, open to different database
         files.
-    '''
+    """
 
-    def __init__(self, name,  api):
-        '''
-        '''
+    def __init__(self, name, dbname, api):
+        """Create a SqlLiteConnection object.
+
+        Sets up the info for a single connection to a db file.
+
+            Args:
+                name    :   The name of this connection.
+
+                dbname  :   The base name of the database file.
+
+                api     :   A reference back to the engine API.  Used for error messages.
+
+            Returns:
+                None
+
+        """
 
         self.__name = name
         self.__api = api
-        self.__dbname = ''
+        self.__dbname = dbname
+        self.__dbpath = ''
 
         self.__client = None
         self.__lock = threading.Lock()
 
-    def sql_open_(self, dbname, **kwargs):
-        """
-            Open a database for use.
+    def sql_open_(self, dbpath, **kwargs):
+        """Open a database for use.
 
-                Optional arguments:
-                    autocommit=True -       Commits changes to the database after
-                                                sql_execute_() call.  Default=False
-                    check_same_thread=False Allow updates from multiple threads.
-        """
+        This method tries to connect to a Sqlite3 database file.
 
+            Args:
+                dbpath      :   The full pathname of the Sqlite3 db file.
+
+                **kwargs    :   Options to pass down to sqlite3.
+
+            Returns:
+                True if the database was opened.
+
+                False if there was an error.
+
+            Options:
+                    * autocommit=True   :   Commits changes to the database after sql_execute_() call.  Default=False
+
+                    * check_same_thread=False   :   Allow updates from multiple threads.
+
+        """
 
         threadFlag = kwargs.get('check_same_thread', False)
 
@@ -385,19 +550,19 @@ class SqlLiteConnection():
             return False
         try:
             # try to open the sqlite3 database
-            conn = sqlite3.connect(dbname,  check_same_thread=threadFlag)
+            conn = sqlite3.connect(dbpath, check_same_thread=threadFlag)
             # wrap it in our local object
-            self.__client = _SqlDatabase(dbname, conn, **kwargs)
-            self.__dbname = dbname
+            self.__client = _SqlDatabase(dbpath, conn, **kwargs)
+            self.__dbpath = dbpath
             return True
         except Exception as e:
-            return retError(self.__api, MODNAME, 'Error opening database '+'"'+dbname+'":'+str(e), False)
+            return retError(self.__api, MODNAME, 'Error opening database '+'"'+dbpath+'":'+str(e), False)
         return False
 
 
     def sql_close_(self):
         """
-            Close the connection to database and clean-up
+            Close the connection to database and clean-up.
         """
         if self.__client == None:
             return False
@@ -414,13 +579,28 @@ class SqlLiteConnection():
 
 
     def sql_execute_(self, sql, *args, **kwargs):
-        """
+        """Execute a sql statement.
+
             Submit a SQL statement to the database.
 
-                Optional arguments:
-                    args - values to replace ? in the sql statement
+                Args:
+                    sql         :   The SQL statement to execute.
+
+                    *args       :   Values to substitute in the above SQL (if any).
+
+                    **kwargs    :   Options to pass down to sqlite3.
+
+                Returns:
+                    A cursor reference if successful.
+
+                    None if there was an error.
+
+                Options:
+                    args - values to replace ? in the sql statement.
+
                     autocommit=True - Commits changes to the database after
-                                        the execute_() call.  Default=False
+                                        the execute_() call.  Default=False.
+
         """
         if self.__client == None:
             return None
@@ -447,9 +627,18 @@ class SqlLiteConnection():
 
 
     def sql_commit_(self):
+        """Handles the sql_commit_() function.
+
+        Commit pending updates to the database.  If autocommit is True,
+        this function has no effect.
+
+            Args:
+                None
+            Returns:
+                The return value. True for success, False otherwise.
+
         """
-            Commit any pending changes to the database
-        """
+
         if self.__client == None:
             return False
         try:
@@ -467,9 +656,20 @@ class SqlLiteConnection():
 
 
     def sql_rollback_(self):
+        """Rollback pending changes.
+
+        If autocommit is False, updates to the database are held in a buffer
+        until sql_commit_() is called.  This function clears that buffer,
+        effectively reverting changes back to the last sql_commit_().  If
+        autocommit is True, this function has no effect.
+
+            Args:
+                None
+            Returns:
+                The return value. True for success, False otherwise.
+
         """
-            Undo any changes since the last sql_commit_()
-        """
+
         if self.__client == None:
             return False
         try:
@@ -487,9 +687,19 @@ class SqlLiteConnection():
 
 
     def sql_changes_(self):
+        """Return the number of recent updates.
+
+       Returns the number of changes to the database since it was last
+       opened.
+
+            Args:
+                None
+            Returns:
+                The number of updates in this session.
+                -1 if there was an error.
+
         """
-            Return the number of database changes since creation
-        """
+
         if self.__client == None:
             return -1
 
@@ -504,15 +714,22 @@ class SqlLiteConnection():
     #    0 = get all the rows as a list of tuples
     #   >0 = gets all rows <n> at a time as a list of tuples
     def sql_cursor_fetch_(self, cursor, count=0):
-        """
-            Get rows from a cursor (returned by sql_execute_())
+        """Get rows from a cursor (returned by sql_execute_()).
 
-            size parameter:
-                -1 = get the next row as a tuple
-                 0 = get all the rows as a list of tuples
-                >0 = gets all rows <n> at a time as a list of tuples
+        Return one or many rows from the supplied cursor.
+
+            Args:
+                cursor  :   The cursor reference returned by sql_execute_().
+                count   :   The number of rows to return.
+                                * -1 = get the next row as a tuple.
+                                * 0 = get all the rows as a list of tuples.
+                                * >0 = gets all rows <n> at a time as a list of tuples.
+            Returns:
+                The requested number of rows.
+                None if an error occurred.
 
         """
+
         if not cursor:
             return None
 
@@ -537,6 +754,10 @@ class SqlLiteConnection():
 
         return ret
 
+    def sql_get_dbname_(self):
+        """Return this connection's db file name ."""
+
+        return self.__dbname
 
 
 #----------------------------------------------------------------------
@@ -546,13 +767,15 @@ class SqlLiteConnection():
 #----------------------------------------------------------------------
 
 class _SqlDatabase:
-    """
+    """Sqllite3 database proxy objext.
+
         This wraps the sqlite3 connection with some additional state info
+
     """
 
-    def __init__(self, dbname, dbconn, **kwargs):
-        self.__dbname = dbname
-        self.__dbconn = dbconn
+    def __init__(self, dbpath, dbconn, **kwargs):
+        self.__dbpath = dbpath  # full path to the db file
+        self.__dbconn = dbconn  # the connection that created us
         # set the default autocommit
         self.__autocommit = kwargs.pop('autocommit', True)
         self.__threading = kwargs.get('check_same_thread', False)

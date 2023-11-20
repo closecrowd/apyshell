@@ -1,42 +1,44 @@
 #!/usr/bin/env python3
-"""
-    mqttext -mqtt client commands
+"""mqttext -mqtt client commands
 
-    This extension implements a client for the MQTT pub/sub protocol.
-    It can handle multiple connections to MQTT brokers, publish messages
-    to topics, and subscribe to topics.  Incoming messages on subscribed
-    topics may be delivered by polling, or by callbacks.
+This extension implements a client for the MQTT pub/sub protocol.
+It can handle multiple connections to MQTT brokers, publish messages
+to topics, and subscribe to topics.  Incoming messages on subscribed
+topics may be delivered by polling, or by callbacks.
 
-    The link to a broker is represented by a connection name.  Each
-    connection is seperate from the others, and each may have multiple
-    topics subscribed to it.
+The link to a broker is represented by a connection name.  Each
+connection is seperate from the others, and each may have multiple
+topics subscribed to it.
 
-    Make the functions available to a script by adding:
+Make the functions available to a script by adding:
 
-        loadExtension_('mqttext')
+    loadExtension_('mqttext')
 
-    to it.  Functions exported by this extension:
+to it.  Functions exported by this extension:
 
-            mqtt_connect_()     : Create a named connection to a broker
-            mqtt_disconnect_()  : Close a named connection
-            mqtt_list_()        : List all currently-active connections
-            mqtt_subscribe_()   : Subscribe a connection to a topic
-            mqtt_unsubscribe_() : Remove a subscription from a connection
-            mqtt_isrunning_()   : True is the connection is attached to a broker
-            mqtt_waiting_()     : The number of messages waiting to be read
-            mqtt_readmsg_()     : Return the first availabel message on the connection
-            mqtt_sendmsg_()     : Send a message to a given topic
+Methods:
+        mqtt_connect_()     : Create a named connection to a broker
+        mqtt_disconnect_()  : Close a named connection
+        mqtt_list_()        : List all currently-active connections
+        mqtt_subscribe_()   : Subscribe a connection to a topic
+        mqtt_unsubscribe_() : Remove a subscription from a connection
+        mqtt_isrunning_()   : True is the connection is attached to a broker
+        mqtt_waiting_()     : The number of messages waiting to be read
+        mqtt_readmsg_()     : Return the first availabel message on the connection
+        mqtt_sendmsg_()     : Send a message to a given topic
 
+Note:
     Required Python modules:
 
         paho.mqtt.client
 
-    version: 1.0
-    last update: 2023-Nov-13
-    License:  MIT
-    Author:  Mark Anacker <closecrowd@pm.me>
-    Copyright (c) 2023 by Mark Anacker
---------------------------------------------------------------------
+Credits:
+    * version: 1.0
+    * last update: 2023-Nov-13
+    * License:  MIT
+    * Author:  Mark Anacker <closecrowd@pm.me>
+    * Copyright (c) 2023 by Mark Anacker
+
 """
 
 modready = True
@@ -82,17 +84,17 @@ def debug(*args):
 # ----------------------------------------------------------------------------
 
 class MqttExt():
-
-    ''' This class manages commands to send/receive mqtt messages '''
+    """This class manages commands to send/receive mqtt messages """
 
     def __init__(self, api, options={}):
-        '''
-        Constructs an instance of the MqttExt class.  This instance will manage
-        all connections to mqtt brokers.  There will be only once of these
-        instances at a time.
+        """Constructs an instance of the MqttExt class.
+
+        This instance will manage all connections to mqtt brokers.
+        There will be only once of these instances at a time.
 
         Args:
             api     : an instance of ExtensionAPI connecting us to the engine.
+
             options : a dict of option settings passed down to the extension.
 
         Returns:
@@ -101,16 +103,20 @@ class MqttExt():
         Attributes:
             __api           : An instance of ExtensionAPI passed by the host, used
                                 to call back into the engine.  Copied from api.
+
             __options       : A dict of options from the host that may or may not
                                 apply to this extension.  Copied from options.
 
             __cmddict       : Dispatch table of our script command names and their
                                 functions.
+
             __conns         : The table of active connections, indexed by name.
+
             __locktimeout   : Timeout in seconds to wait for a mutex.
+
             __lock          : Thread-locking mutex.
 
-        '''
+        """
 
         self.__api = api
         self.__options = options
@@ -121,20 +127,22 @@ class MqttExt():
 
 
     def register(self):
-        ''' Make this extension's commands available to scripts
+        """Make this extension's functions available to scripts.
 
-        Commands installed
-        ------------------
+        This method installs our script API methods as functions in the
+        engine symbol table, making them available to scripts.
 
-            mqtt_connect_()     : Create a named connection to a broker
-            mqtt_disconnect_()  : Close a named connection
-            mqtt_list_()        : List all currently-active connections
-            mqtt_subscribe_()   : Subscribe a connection to a topic
-            mqtt_unsubscribe_() : Remove a subscription from a connection
-            mqtt_isrunning_()   : True is the connection is attached to a broker
-            mqtt_waiting_()     : The number of messages waiting to be read
-            mqtt_readmsg_()     : Return the first availabel message on the connection
-            mqtt_sendmsg_()     : Send a message to a given topic
+        Note:
+            Functions installed:
+                * mqtt_connect_()     : Create a named connection to a broker
+                * mqtt_disconnect_()  : Close a named connection
+                * mqtt_list_()        : List all currently-active connections
+                * mqtt_subscribe_()   : Subscribe a connection to a topic
+                * mqtt_unsubscribe_() : Remove a subscription from a connection
+                * mqtt_isrunning_()   : True is the connection is attached to a broker
+                * mqtt_waiting_()     : The number of messages waiting to be read
+                * mqtt_readmsg_()     : Return the first availabel message on the connection
+                * mqtt_sendmsg_()     : Send a message to a given topic
 
         Args:
             None
@@ -142,9 +150,11 @@ class MqttExt():
         Returns
             True        :   Commands are installed and the extension is
                             ready to use.
+
             False       :   Commands are NOT installed, and the extension
                             is inactive.
-        '''
+
+        """
 
         if not modready:
             return False
@@ -169,7 +179,8 @@ class MqttExt():
         return True
 
     def unregister(self):
-        ''' Remove this extension's commands '''
+        """Remove this extension's functions from the engine. """
+
         if not modready:
             return False
 
@@ -179,7 +190,13 @@ class MqttExt():
         return True
 
     def shutdown(self):
-        ''' Perform a graceful shutdown '''
+        """Perform a graceful shutdown.
+
+        Close all of the active MQTT connections.  This gets called
+        by the extension manager just before the extension is unloaded.
+
+        """
+
         for cname in self.__conns.keys():
             self.__conns[cname].disconnect_(cname)
         return True
