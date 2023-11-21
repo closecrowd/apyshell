@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """extensionmgr - Handles extension load/unload for apyshell.
 
-This script supports the extension handling commands for apyshell.
+This module supports the extension handling commands for apyshell.
 
 Credits:
     * version: 1.0
-    * last update: 2023-Nov-13
+    * last update: 2023-Nov-20
     * License:  MIT
     * Author:  Mark Anacker <closecrowd@pm.me>
     * Copyright (c) 2023 by Mark Anacker
@@ -59,7 +59,6 @@ def quoteSpecial(orig):
 class ExtensionMgr:
 
     def __init__(self, eng, epath, options=None):
-        debugMsg(MODNAME, "ExtensionMgr")
 
         self.__engine = eng               # the script engine
         self.__expath = epath             # extension directory path
@@ -90,6 +89,32 @@ class ExtensionMgr:
 
     # add our script functions
     def register(self):
+        """Make this extension's functions available to scripts
+
+        This method installs our script API methods as functions in the
+        engine symbol table, making them available to scripts.
+
+        Note:
+            Functions installed:
+                * scanExtensions_()  :  Look through the extensions dir and return a list of available extensions.
+                * listExtensions_()  :  Return a list of loaded extensions.
+                * isExtLoaded_()     :  Return True if the extension is loaded.
+                * loadExtension_()   :  Load an extension into the engine.
+                * unloadExtension_() :  Remove an extension from the engine.
+
+            Args:
+
+                None
+
+            Returns
+                True        :   Commands are installed and the extension is
+                                ready to use.
+
+                False       :   Commands are NOT installed, and the extension
+                                is inactive.
+
+        """
+
         self.__cmddict = {}
         self.__cmddict['scanExtensions_'] = self.scanExtensions_
         self.__cmddict['listExtensions_'] = self.listExtensions_
@@ -101,6 +126,15 @@ class ExtensionMgr:
 
     # call shutdown() in each active extension
     def shutdown(self):
+        """Perform a graceful shutdown.
+
+        Calls the shutdown() method of each loaded extension, making sure
+        they go cleanly.
+
+        This gets called by apyshell just before is exits.
+
+        """
+
         for en in self.__activeExtensions.keys():
             ext = self.__activeExtensions[en]
             try:
@@ -115,12 +149,50 @@ class ExtensionMgr:
 
     # return the list of available extension names
     def scanExtensions_(self):
-        ''' Return a list[] of available extensions '''
-        return self.scanForExtensions(self.__expath, True)
+        """Handles the scanExtensions_() function.
+
+        This function builds a list of the Python files in the extension
+        director(ies) stored in self.__expath.  This can be either a
+        single directory, or a list of them.  All .py files in these
+        directories are presumed to be extensions, although there is a
+        signature test performed at extension load time.
+
+        You can limit which extensions are available simply by limiting
+        which files are placed into these directories.
+
+            Args:
+
+                None
+
+            Returns:
+
+                A list[] of the available extension names.
+
+                None if there are no extensions.
+
+        """
+
+        return self.scanForExtensions(self.__expath, None)
 
     # return the list of active extension names
     def listExtensions_(self):
-        ''' Return a list[] of currently-loaded extensions '''
+        """Handles the listExtensions_() function.
+
+        Return a list[] of currently-loaded extensions - those that
+        a script has used loadExtension_() to install.
+
+            Args:
+
+                None
+
+            Returns:
+
+                A list[] of the loaded extension names.
+
+                None if there are no loaded extensions.
+
+        """
+
         # if we have no extensions loaded
         if len(self.__activeExtensions) == 0:
             # force a rescan:
@@ -129,7 +201,23 @@ class ExtensionMgr:
 
     # return True if the named extension is loaded
     def isExtLoaded_(self, ename):
-        ''' Return True if an extension is loaded '''
+        """Handles the isExtLoaded_() function.
+
+        This function is used to test whether an extension is currently
+        loaded or not.
+
+            Args:
+
+                ename   :   The name of the extension to check.
+
+            Returns:
+
+                True    :   The extension is loaded.
+
+                False   :   It's not loaded.
+
+        """
+
         if not checkFileName(ename):
             return False
 
@@ -139,11 +227,29 @@ class ExtensionMgr:
 
     # load a named extension if it's not already loaded
     def loadExtension_(self, ename):
-        ''' Load an extension by name (no paths allowed),
-        and it has to be available in the extensions directory.
-       '''
+        """Handles the loadExtension_() function.
 
-        # check for an empty
+        This function loads an extension by name (no paths allowed),
+        if it's in the __availExtensions list.  If the list is
+        empty, the extensions directories are scanned.
+
+        If the extension is available, it's loaded into the engine's
+        symbol table and the register() function is called to add it's
+        functions.
+
+            Args:
+
+                ename   :   The name of the extension to load.
+
+            Returns:
+
+                True    :   The extension loaded correctly.
+
+                False   :   It didn't load.
+
+        """
+
+        # check for an empty name
         if not ename or len(ename) < 1:
             return False
 
@@ -154,23 +260,26 @@ class ExtensionMgr:
         if not checkFileName(ename):
             return False
 
-        # force a rescan if needed
-        if len(self.__availExtensions) == 0:
-            self.scanForExtensions(self.__expath, True)
-
-        if ename not in self.__availExtensions:
-            debugMsg(MODNAME, "** unknown extension name:", ename)
-            return False
-
+        # if it's already loaded
         if ename in self.__activeExtensions:
             debugMsg(MODNAME, "** extension already loaded:", ename)
             return False
 
+        # force a rescan if needed
+        if len(self.__availExtensions) == 0:
+            self.scanForExtensions(self.__expath, True)
+
+        # if it's still not available
+        if ename not in self.__availExtensions:
+            debugMsg(MODNAME, "** unknown extension name:", ename)
+            return False
+
+        # grab the path from the available list
         (path, mpath) = self.__availExtensions[ename]
         debugMsg(MODNAME, "Loading extension ",ename," from ", path)
 
         try:
-
+            # new python...
             if pverf > 3.4:
                 spec = importlib.util.spec_from_loader(ename, importlib.machinery.SourceFileLoader(ename, path))
                 newmod = importlib.util.module_from_spec(spec)
@@ -185,7 +294,10 @@ class ExtensionMgr:
                 finally:
                     sys.path[:] = oldpath # restore the previous path
 
+            # extension signature check
             try:
+                # every valid extension file has __key__ and
+                # __cname__ variables defined at the top.
                 newkey = newmod.__key__
                 newclass = newmod.__cname__
             except Exception as e:
@@ -221,7 +333,24 @@ class ExtensionMgr:
 
 
     def unloadExtension_(self, ename):
-        ''' Remove a currently-loaded extension '''
+        """Handles the unloadExtension_() function.
+
+        This function removes a currently-loaded extension from the
+        symbol table, making it unavailable to scripts.  It calls the
+        shutdown() and unregister() methods in the extension before
+        removing it.
+
+            Args:
+
+                ename   :   The name of the extension to unload.
+
+            Returns:
+
+                True    :   The extension unloaded correctly.
+
+                False   :   There was an error.
+
+        """
 
         if not checkFileName(ename):
             return False
@@ -234,6 +363,7 @@ class ExtensionMgr:
         if ename in self.__exobjs:
             # get the current instance
             m = self.__exobjs[ename]
+
             # shut it down
             m.shutdown()
             # and remove the commands
@@ -253,6 +383,29 @@ class ExtensionMgr:
     # event callbacks from extensions come here
     # they are then dispatched into the script
     def handleEvents(self, name, data):
+        """Handle callback events.
+
+        If an extension allows for handlers to receive events, each
+        callback comes through here.  This function makes sure the
+        handler (a def func() in the script) is defined.  It then
+        executes the handler func **in the context of the thread
+        that calls this method.**  This may not be the thread that
+        the majority of the script is running on.
+
+            Args:
+
+                name    :   The name of the handler func().
+
+                data    :   The object to pass as the **only** argument to the handler.
+
+            Returns:
+
+                 ret    :   A string with the return from the handler()
+
+                None    :   Something failed
+
+        """
+
         # if not data or not name:
         if not name or len(name) < 1:
             return None
@@ -293,6 +446,9 @@ class ExtensionMgr:
             self.spath = dir
         else:
             self.spath = [dir]
+
+        # clear the current list
+        self.__availExtensions.clear()
 
         # for each path in the list
         for pl in self.spath:

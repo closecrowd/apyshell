@@ -161,6 +161,7 @@ class QueueExt():
         the extension is unloaded.
 
         """
+
         return True
 
 #----------------------------------------------------------------------

@@ -6,7 +6,7 @@ to give them an API back into the engine via the ExtensionMgr
 
 Credits:
     * version: 1.0
-    * last update: 2023-Nov-13
+    * last update: 2023-Nov-20
     * License:  MIT
     * Author:  Mark Anacker <closecrowd@pm.me>
     * Copyright (c) 2023 by Mark Anacker
@@ -43,12 +43,50 @@ class ExtensionAPI:
 
     # callback from extensions into the script
     def handleEvents(self, name, data):
-        return self.__parent.handleEvents(name, data)
+        """Handle callback events.
 
+        If an extension allows for handlers to receive events, each
+        callback comes through here.  This function passes the name
+        and data object through to the ExtensionMgr to run in the
+        engine.
+
+            Args:
+
+                name    :   The name of the handler func().
+
+                data    :   The object to pass as the **only** argument to the handler.
+
+            Returns:
+
+                 ret    :   A string with the return from the handler()
+
+                None    :   Something failed
+
+        """
+
+        return self.__parent.handleEvents(name, data)
 
 
     # register the module's new funcs in the engine
     def registerCmds(self, mdict):
+        """Make an extension's functions available to scripts
+
+        Extensions call here through the api reference to install
+        their commands into the engine.
+
+            Args:
+
+                mdict   :   A dict with the commands and function refs.
+
+            Returns
+                True        :   Commands are installed and the extension is
+                                ready to use.
+
+                False       :   Commands are NOT installed, and the extension
+                                is inactive.
+
+        """
+
         if len(mdict) < 1:
             return False
         try:
@@ -61,6 +99,23 @@ class ExtensionAPI:
 
     # remove a module's commands
     def unregisterCmds(self, mdict):
+        """Remove an extension's commands from the engine.
+
+        Extensions call here through the api reference to remove
+        their commands from the engine.
+
+            Args:
+
+                mdict   :   A dict with the commands and function refs.
+
+            Returns
+
+                True        :   Commands have been removed.
+
+                False       :   Something failed.
+
+        """
+
         if len(mdict) < 1:
             return False
         try:
