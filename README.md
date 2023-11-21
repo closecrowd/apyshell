@@ -15,10 +15,12 @@ What's it good for? Anywhere you want to use the full power of Python scripts, y
 
 It's pretty easy to hook together extensions talking to various systems and protocols, with far less glue logic than bare Python.  It's similar to the way that a document template processor combines a small amount of text with a large boilerplate.  An .apy script may be very few lines, yet have the same funcionality as pages and pages of raw Python.  Most of the complexity is hidden in the loadable extensions.
 
+Apyshell is like school spring break - lots of fun, and no classes!
+
 
 This code is currently being developed on Linux, and tested on Python 3.5.4 to 3.11.6.  Ports to Windows, Android, and MacOS are in progress.
 
-The code is fully functional, and the documentation is in process.  Expect updates.  Suggestions are always welcome at:  closecrowd@pm.me
+The code is fully functional, and the documentation is in process.  Expect updates.  Suggestions are always welcome at:  **closecrowd@pm.me**
 
 ### Installation
 
@@ -65,9 +67,36 @@ If you have the scripts and extensions directories under the default '/opt/apysh
 
     ./apyshell.py demo
 
+### Modules
+
+Sometimes, you need some functionality that doesn't fit well into the Extension format.  Apyshell scripts can call for certain selected Pythons modules to be installed directly into the engine.  These modules add new commands directly into the symbol table.
+
+Modules currently available are:
+
+- numpy
+- time
+- json
+- base64
+
+Your script installs a module by using the "install_()" command.  For instance, to make Python's time module available:
+
+	install_('time')
+
+and your script will now have access to the time functions.  Once a module is installed, is stays available until apyshell exits.  There is no "unstall_()".
+
+One thing to note: The functions are from Python, but the names have been changed slightly to fit into apyengine's scheme.  For instance, **asctime() ** is changed to **asctime_()**.  Functionality is unchanged - only the names.
+
+A full list of module function names will be in the Apyshell Programming Manual.
+
 ### Extensions
 
 Extensions provide advanced features to your scripts, while keeping things safe and simple.  The selection of extensions available to scripts is controlled by the **extensiondir**  option.  
+
+Extensions are added with the "loadExtension_()" command.   For example:
+
+	r = loadExtension_('mqttext')
+
+If **r** is True, the extension is loaded and it's functions are available to the scripts.  Unlike Modules, there is a corresponding "unloadExtension_()" command to remove the extension.
 
 There are many extensions in development.  They'll be added to the GitHub repo as quickly as their documentation and sample scripts can be updated.
 
@@ -75,7 +104,7 @@ Currently available are:
 
 - mqttext - A full-featured MQTT client
 
-- sqliteext - Manage SqlIte3 databases
+- sqliteext - Manage Sqlite3 databases
 
 - queueext - A utility extension providing thread-safe queues (FIFO and LIFO)
 
