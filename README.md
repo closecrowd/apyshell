@@ -13,6 +13,9 @@ What's it good for? Anywhere you want to use the full power of Python scripts, y
 
 - Rapid tool development:  I use apyshell scripts running as daemons to do many monitoring and control functions in my networks.  With the right extensions available, it's pretty easy to do things like IOT control.
 
+- Functional prototyping: With custom extensions simulating various subsystems, a functional prototype can be put together and re-arranged quickly.  You can work out the structure and flow of your appplication *before* it's set in stone, and costly to alter.
+
+
 It's pretty easy to hook together extensions talking to various systems and protocols, with far less glue logic than bare Python.  It's similar to the way that a document template processor combines a small amount of text with a large boilerplate.  An .apy script may be very few lines, yet have the same funcionality as pages and pages of raw Python.  Most of the complexity is hidden in the loadable extensions.
 
 Apyshell is like school spring break - lots of fun, and no classes!
@@ -113,4 +116,5 @@ Currently available are:
 - utilext - A utility extension with several useful functions
 
 
-more will be coming soon.
+There are many more completed or in development.  They will be published to the GitHub repo as soon as their documentation is finished.
+
