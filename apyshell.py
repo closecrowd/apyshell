@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """apyshell - Python Embedded apy script runnner
 
-This script creates a framework for running lightweight scripts
+This module creates a framework for running lightweight scripts
 under the apyengine interpreter.  It demonstrates embedding and
-controlling the engine.  It can be run either stand-alone, or
-itself embedded into an application.
+controlling the engine, and extending the funcionality available
+to scripts.
+
+It can be run either stand-alone, or itself embedded into an application.
 
 Credits:
     * version: 1.0
-    * last update: 2023-Nov-17
+    * last update: 2023-Nov-21
     * License:  MIT
     * Author:  Mark Anacker <closecrowd@pm.me>
     * Copyright (c) 2023 by Mark Anacker
@@ -37,10 +39,13 @@ VERSION = "1.0"
 basedir = '/opt/apyshell/scripts'           # script base directory
 extensiondir = '/opt/apyshell/extensions'   # entension base dir
 
-# options passed to extensions.
-extension_opts = {  'allow_redis_cmds':True, 'allow_system':True,
-                    'file_root':'/opt/apyshell/files',  'allow_getenv':True,
-                    'sql_root':'/tmp', 'sql_ext':'db'
+# options passed to various extensions.  Modify to suit your environment.
+extension_opts = {  'allow_redis_cmds':True, # allow raw commands in redisext
+                    'allow_system':True,     # allow system_() call in utilext
+                    'allow_getenv':True,     # allow getenv_() call in utilext
+                    'file_root':'/opt/apyshell/files',  # fileext is rooted here
+                    'sql_root':'/opt/apyshell/files',   # sqliteext files go here
+                    'sql_ext':'db'                      # sqliteext file extension
 }
 
 # ----------------------------------------------------------------------------

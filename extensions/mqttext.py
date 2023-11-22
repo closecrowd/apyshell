@@ -132,6 +132,8 @@ class MqttExt():
         This method installs our script API methods as functions in the
         engine symbol table, making them available to scripts.
 
+        This is called by the ExtensionMgr during loading.
+
         Note:
             Functions installed:
                 * mqtt_connect_()     : Create a named connection to a broker
@@ -144,15 +146,14 @@ class MqttExt():
                 * mqtt_readmsg_()     : Return the first availabel message on the connection
                 * mqtt_sendmsg_()     : Send a message to a given topic
 
-        Args:
-            None
+            Args:
+                None
 
-        Returns
-            True        :   Commands are installed and the extension is
-                            ready to use.
+            Returns:
 
-            False       :   Commands are NOT installed, and the extension
-                            is inactive.
+                True        :   Commands are installed and the extension is ready to use.
+
+                False       :   Commands are NOT installed, and the extension is inactive.
 
         """
 
@@ -209,15 +210,21 @@ class MqttExt():
 
     # connect to a broker
     def connect_(self, cname=defaultName, **kwargs):
-        '''
+        """Handles the mqtt_connect_() function.
+
         Create a connection object and establish a connection to a broker.
 
             Args:
+
                 cname       : The name of the connection
+
                 **kwargs    : A dict with all of the required parameters
+
             Returns:
+
                 The return value. True for success, False otherwise.
-        '''
+
+        """
 
         debugMsg(MODNAME, 'mqtt:connect:',kwargs, type(kwargs))
 
@@ -236,15 +243,20 @@ class MqttExt():
 
     # drop a broker
     def disconnect_(self, cname=defaultName):
-        '''
+        """Handles the mqtt_disconnect_() function.
+
         Closes an open connection to a broker, and removes the connection
         from the table.
 
             Args:
+
                 cname:      The name of the connection to remove
+
             Returns:
+
                 The return value. True for success, False otherwise.
-        '''
+
+        """
 
         debugMsg(MODNAME, "mqtt disconnect")
 

@@ -100,6 +100,8 @@ class FileExt():
         This method installs our script API methods as functions in the
         engine symbol table, making them available to scripts.
 
+        This is called by the ExtensionMgr during loading.
+
         Note:
             Functions installed:
                 * readLines_()    :   read a text file line-by-line or all-at-once

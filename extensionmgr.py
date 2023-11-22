@@ -59,6 +59,25 @@ def quoteSpecial(orig):
 class ExtensionMgr:
 
     def __init__(self, eng, epath, options=None):
+        """Constructs an instance of the ExtensionMgr class.
+
+        This instance manages the loading and unloading of extension modules
+        in an apyengine instance.  Extensions add new functions callable
+        by scripts.
+
+            Args:
+
+                    eng     :   The instance of ApyEngine to manage.
+
+                    epath   :   The path or list of paths to allowed extensions.
+
+                    options :   A dict of extension options passed down to all extensions.
+
+            Returns:
+
+                Nothing
+
+        """
 
         self.__engine = eng               # the script engine
         self.__expath = epath             # extension directory path
@@ -87,12 +106,31 @@ class ExtensionMgr:
         # create API for the extensions to call back to us
         self.__api = ExtensionAPI(self.__engine, self, True)
 
+        # TODO: add a lock to prevent mayhem if someone should call these
+        # commands from different threads simultaneously.
+
+
+
     # add our script functions
     def register(self):
         """Make this extension's functions available to scripts
 
         This method installs our script API methods as functions in the
         engine symbol table, making them available to scripts.
+
+        This is called by the host application right after the ExtensionMgr
+        object is instanciated.
+
+            Example:
+
+                # create the extension manager
+
+                emgr = ExtensionMgr(engine, extensiondir, extension_opts)
+
+                # register it's commands
+
+                emgr.register()
+
 
         Note:
             Functions installed:
@@ -104,14 +142,11 @@ class ExtensionMgr:
 
             Args:
 
-                None
+                None.
 
             Returns
-                True        :   Commands are installed and the extension is
-                                ready to use.
 
-                False       :   Commands are NOT installed, and the extension
-                                is inactive.
+                Nothing.
 
         """
 
@@ -172,7 +207,7 @@ class ExtensionMgr:
 
         """
 
-        return self.scanForExtensions(self.__expath, None)
+        return self.scanForExtensions(self.__expath)
 
     # return the list of active extension names
     def listExtensions_(self):
@@ -196,7 +231,7 @@ class ExtensionMgr:
         # if we have no extensions loaded
         if len(self.__activeExtensions) == 0:
             # force a rescan:
-            self.scanForExtensions(self.__expath, True)
+            self.scanForExtensions(self.__expath)
         return list(self.__activeExtensions.keys())
 
     # return True if the named extension is loaded
@@ -267,7 +302,7 @@ class ExtensionMgr:
 
         # force a rescan if needed
         if len(self.__availExtensions) == 0:
-            self.scanForExtensions(self.__expath, True)
+            self.scanForExtensions(self.__expath)
 
         # if it's still not available
         if ename not in self.__availExtensions:
@@ -438,7 +473,15 @@ class ExtensionMgr:
 
     # build the list of (path, extension)
     # and save the internal flag
-    def scanForExtensions(self, dir, iflag):
+    def scanForExtensions(self, dir):
+        """Scan the extension dirs for modules.
+
+        This method wlaks through the supplied entension paths
+        and records all of the Python modules.  This creates the
+        list of available extensions.
+
+        """
+
         sext = '.py'
 
         # if it's a list, use it
@@ -460,13 +503,14 @@ class ExtensionMgr:
                 for de in dl:
                     (mpath, pname) = de
 
-                    # skip the module flag
+                    # skip the module definition file
                     if pname == '__init__':
                         continue
 
                     filename = mpath+'/'+pname+sext
                     # add to the set of available exts keyed by name
                     self.__availExtensions[de[1]] = (filename, mpath)
+
         debugMsg(MODNAME, "scan:", self.__availExtensions)
 
         return list(self.__availExtensions.keys())

@@ -5,7 +5,7 @@ This file contains various utility functions used by apyshell.
 
 Credits:
     * version: 1.0
-    * last update: 2023-Nov-13
+    * last update: 2023-Nov-21
     * License:  MIT
     * Author:  Mark Anacker <closecrowd@pm.me>
     * Copyright (c) 2023 by Mark Anacker
@@ -15,7 +15,6 @@ Credits:
 import sys
 import os
 import string
-
 
 ##############################################################################
 
@@ -79,8 +78,11 @@ def sanitizePath(path):
     Remove dangerous characters from a path string.
 
         Args:
-            path    :   The strin with the path to clean
+
+            path    :   The string with the path to clean
+
         Returns:
+
             The cleaned path or None if there was a problem
 
     """
@@ -110,13 +112,34 @@ def sanitizePath(path):
 
 
     #
-    # Windows - TODO
+    # Windows - TODO:
     #
 
     return path
 
 # log an error and return
 def retError(api, module, msg, ret=False):
+    """Logging error return.
+
+    Extensions call this function to log an error message through
+    the ExtensionMgr API, then pass up an error value.
+
+        Args:
+
+            api     :   The extensionmgr api reference.
+
+            module  :   A string with the failed module name.
+
+            msg     :   The actual error message.
+
+            ret     :   The value to return.
+
+        Returns:
+
+            The value of ret, or False if it's missing.
+
+    """
+
     if api != None:
         api.logError(module, msg)
     else:
@@ -129,12 +152,52 @@ def retError(api, module, msg, ret=False):
 
 # unlock a thread lock
 def unlock__(lock):
+    """Unlock a locked mutex.
+
+    Utility function to unlock a mutex if it's currently
+    locked.
+
+        Args:
+
+            lock    :   An instance of threading.Lock().
+
+        Returns:
+
+            Nothing.
+
+    """
+
     if lock:
         if lock.locked():
             lock.release()
 
 # return a dict entry or default, optionally remove it
 def getparam(table, key, default, remove=False):
+    """Destructively return a dict entry.
+
+    Return a value from a dict, optionally removing it from the
+    dict after grabbing it.  This is mainly used to remove options
+    from a **kwargs parameter before passing it down to a lower
+    level function.
+
+    If the key is not found in the dict, return a default value.  Remove
+    has no effect in this case.
+
+        Args:
+
+            table   :   The dict object to modify.
+
+            key     :   The key to look up.
+
+            default :   A default value to return if key isn't found.
+
+            remove  :   If True, remove the entry if found.
+
+        Returns:
+
+            The value from the dict, or the default.
+
+    """
     if key in table:
         ret = table[key]
         if remove:
@@ -145,6 +208,31 @@ def getparam(table, key, default, remove=False):
 
 # set or replace a value in a dict
 def setparam(table, key, value, replace=False):
+    """Add or update a value in a dict.
+
+    This function adds a value to a dict, or optionally replaces
+    an existing value.  This is mainly used to manipulate values
+    in **kwargs parameters.
+
+    If the key is not found in the table, add it and it's value.
+    Replace has no effect in this case.
+
+        Args:
+
+            table   :   The dict object to modify.
+
+            key     :   The key to look up.
+
+            value   :   The value to add or replace
+
+            replace :   If True, update an existing value if found.
+
+        Returns:
+
+            Nothing.
+
+    """
+
     # already present
     if key in table:
         # and we're replacing it
@@ -156,6 +244,14 @@ def setparam(table, key, value, replace=False):
 
 # swap keys, or create a new entry
 def swapparam(table, oldkey, newkey, value=None):
+    """Move a dict entry to a new key.
+
+    This function will move a dict entry from an old key to a new
+    key, optionally replacing the value at the same time.  If the
+    old key doesn't exist, a new entry is created.
+
+    """
+
     # already present
     if oldkey in table:
         # if we don't have a new value
@@ -173,9 +269,17 @@ def swapparam(table, oldkey, newkey, value=None):
 
 # get the next item from a queue, or a default value
 def get_queue(q, defvalue=None, timeout=0):
-        try:
-            ret = q.get(True, timeout)   # blocking
-            return ret
-        except:
-            return defvalue
+    """Get the next value from a Queue.
+
+    This function does a blocking GET from a Queue, returning the
+    next item.  If the timeout is > 0 and expires, or there was an
+    error on the get(), return a default value.
+
+    """
+
+    try:
+        ret = q.get(True, timeout)   # blocking
+        return ret
+    except:
+        return defvalue
 

@@ -74,18 +74,27 @@ class ApyEngine():
         Main entry point for apyengine.
 
             Args:
+
                 basepath            : The top directory where script files will be found.
                                         (default=./)
+
                 builtins_readonly   : If True, protect the built-in symbols from being
                                         overridden (default=True).
+
                 global_funcs        : If True, all variables are global, even in
                                         def functions.
                                     : If False, vars created in a def func are local to
                                         that func (default=False).
                                         Can also be modified by setSysFlags_()
+
                 writer              : The output stream for normal print() output.
                                         Defauls to stdout.
+
                 err_writer          : The output stream for errors. Defaults to stderr.
+
+            Returns:
+
+                Nothing.
 
         """
 
@@ -126,8 +135,9 @@ class ApyEngine():
         self.__lastScript = ''    # name of the most-recent script
 
         # register these methods as script-callable funcs
-#        self.regcmd("setSysFlags_", self.setSysFlags_)
-#        self.regcmd("getSysFlags_", self.getSysFlags_)
+        self.regcmd("setSysFlags_", self.setSysFlags_)
+        self.regcmd("getSysFlags_", self.getSysFlags_)
+
         self.regcmd("eval_", self.eval_)
         self.regcmd("check_", self.check_)
         self.regcmd("getSysVar_", self.getSysVar_)

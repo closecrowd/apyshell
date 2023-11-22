@@ -99,6 +99,8 @@ class QueueExt():
         This method installs our script API methods as functions in the
         engine symbol table, making them available to scripts.
 
+        This is called by the ExtensionMgr during loading.
+
         Note:
             Functions installed:
                 * queue_open_()       : Create a named queue
@@ -110,15 +112,15 @@ class QueueExt():
                 * queue_isempty_()    : Return True if the queue is empty
                 * queue_list_()       : Return a list[] of the current queue names
 
-        Args:
-            None
+            Args:
 
-        Returns
-            True        :   Commands are installed and the extension is
-                            ready to use.
+                None
 
-            False       :   Commands are NOT installed, and the extension
-                            is inactive.
+            Returns:
+
+                True        :   Commands are installed and the extension is ready to use.
+
+                False       :   Commands are NOT installed, and the extension is inactive.
 
         """
 

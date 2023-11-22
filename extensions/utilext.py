@@ -94,6 +94,8 @@ class UtilExt():
         This method installs our script API methods as functions in the
         engine symbol table, making them available to scripts.
 
+        This is called by the ExtensionMgr during loading.
+
         Note:
             Functions installed:
                 * input_()        :   read characters from the terminal, return as a string.

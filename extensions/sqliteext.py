@@ -17,6 +17,7 @@ Make the functions available to a script by adding:
 to it.  Functions exported by this extension:
 
 Methods:
+
         sql_open_()         :   Open a sqlite3 database, creating it if it
                                 doesn't exist.
         sql_close_()        :   Close an open connection.
@@ -34,7 +35,7 @@ Note:
 
 Credits:
     * version: 1.0
-    * last update: 2023-Nov-17
+    * last update: 2023-Nov-20
     * License:  MIT
     * Author:  Mark Anacker <closecrowd@pm.me>
     * Copyright (c) 2023 by Mark Anacker
@@ -83,13 +84,15 @@ class SqLiteExt():
         This instance will manage all connections to sqlite3 databases.
         There will be only one of these instances at a time.
 
-        Args:
-            api     : an instance of ExtensionAPI connecting us to the engine.
+            Args:
 
-            options : a dict of option settings passed down to the extension.
+                api     : an instance of ExtensionAPI connecting us to the engine.
 
-        Returns:
-            None
+                options : a dict of option settings passed down to the extension.
+
+            Returns:
+
+                Nothing.
 
         Attributes:
             __api           : An instance of ExtensionAPI passed by the host, used
@@ -148,6 +151,8 @@ class SqLiteExt():
 
         This method installs our script API methods as functions in the
         engine symbol table, making them available to scripts.
+
+        This is called by the ExtensionMgr during loading.
 
         Note:
             Functions installed:
@@ -495,6 +500,7 @@ class SqlLiteConnection():
         This class represents a connection to a sqlite3 database.  There can be
         several connections active simultaneously, open to different database
         files.
+
     """
 
     def __init__(self, name, dbname, api):

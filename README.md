@@ -107,6 +107,8 @@ Currently available are:
 
 - mqttext - A full-featured MQTT client
 
+- redisext - A Redis cache client
+
 - sqliteext - Manage Sqlite3 databases
 
 - queueext - A utility extension providing thread-safe queues (FIFO and LIFO)
