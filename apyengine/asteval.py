@@ -40,7 +40,7 @@ The following Python syntax elements are not supported:
      Import, Exec, Lambda, Class, Global, Generators, Yield, Decorators
 
 In addition, while many builtin functions are supported, several builtin
-functions that are considered unsafe are missing ('eval', 'exec', and
+functions that are considered unsafe are missing ('exec', and
 'getattr' for example)
 
 Credits:
@@ -169,7 +169,8 @@ class Interpreter(object):
         self.use_numpy = False
         self.globalsyms = global_funcs
 
-        self.abort = False
+        self.abort = False  # stop now with an exception
+        self.stop = False   # stop soonest with no error
 
         nodes = ALL_NODES[:]
 
@@ -206,6 +207,17 @@ class Interpreter(object):
         """
 
         self.abort = True
+
+    def stoprun(self):
+        """Terminate execution of a script.
+
+        Sets a flag that causes the currently-running script to exit
+        as quickly as possible, without throwing an exception.
+
+        """
+
+        self.stop = True
+
 
     def remove_nodehandler(self, node):
         """Remove support for a node.
@@ -403,6 +415,9 @@ class Interpreter(object):
 
         # Note: keep the 'node is None' test: internal code here may run
         #    run(None) and expect a None in return.
+
+        if self.stop:
+            return None
 
         if self.abort:
             self.raise_exception(node, expr=None, msg='execution aborted')

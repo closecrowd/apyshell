@@ -72,14 +72,17 @@ FROM_PY = ('ArithmeticError', 'AssertionError', 'AttributeError',
            'tuple', 'zip')
 
 # inherit these from python's math
+# these symbols will have _ appended
 FROM_MATH = ('acos', 'acosh', 'asin', 'asinh', 'atan', 'atan2', 'atanh',
              'ceil', 'copysign', 'cos', 'cosh', 'degrees', 'e', 'exp',
              'fabs', 'factorial', 'floor', 'fmod', 'frexp', 'fsum',
-             'hypot', 'isinf', 'isnan', 'ldexp', 'log', 'log10', 'log1p',
-             'modf', 'pi', 'pow', 'radians', 'sin', 'sinh', 'sqrt', 'tan',
+             'gamma', 'lgamma', 'gcd', 'log2', 'isfinite', 'isclose',
+             'hypot', 'inf', 'isinf', 'isnan', 'ldexp', 'log', 'log10', 'log1p',
+             'modf', 'nan', 'pi', 'pow', 'radians', 'sin', 'sinh', 'sqrt', 'tan',
              'tanh', 'trunc')
 
 # inherit from numpy
+# these symbols will have _ appended
 FROM_NUMPY = ('Inf', 'NAN', 'abs', 'add', 'alen', 'all', 'amax', 'amin',
               'angle', 'any', 'append', 'arange', 'arccos', 'arccosh',
               'arcsin', 'arcsinh', 'arctan', 'arctan2', 'arctanh',
@@ -157,38 +160,29 @@ FROM_NUMPY = ('Inf', 'NAN', 'abs', 'add', 'alen', 'all', 'amax', 'amin',
               'vstack', 'where', 'who', 'zeros', 'zeros_like',
               'fft', 'linalg', 'polynomial', 'random')
 
-# some functions renamed to aviod collisions with Python math functions
-NUMPY_RENAMED = {'log':'ln', 'arcsin':'asin', 'arccos':'acos',
-                 'arctan':'atan', 'arctan2':'atan2','arctanh':'atanh',
-                 'arccosh' :'acosh', 'arcsinh':'asinh'}
-
-# Additional modules.  These provide useful functions.  All function names
-# end with _ (i.e. clock_()), and all time-based constants start with _ (i.e. _tzname)
-
-# Python time modules
+# Python time module
+# these symbols will have _ appended
 FROM_TIME = ('ctime','clock','altzone','asctime','strptime',
               'gmtime','mktime','timezone','sleep','tzname','daylight',
               'time','strftime','localtime', 'monotonic' )
 
-TIME_RENAMED = {'ctime':'ctime_','clock': 'clock_','asctime':'asctime_','strptime':'strptime_', 'monotonic':'monotonic_',
-'gmtime':'gmtime_','mktime':'mktime_','sleep':'sleep_','time':'time_','strftime':'strftime_','localtime':'localtime_',
-'altzone':'_altzone',  'timezone':'_timezone', 'tzname':'_tzname', 'daylight':'_daylight' }
-
 # Python base64 module
-FROM_BASE64 = ('b64encode', 'b64decode')
-BASE64_RENAMED = {'b64encode':'b64encode_', 'b64decode':'b64decode_'}
+# these symbols will have _ appended
+FROM_BASE64 = ('b64encode', 'b64decode', 'urlsafe_b64encode', 'urlsafe_b64decode')
 
 # Python JSON module
+# these symbols will have _ appended
 FROM_JSON = ('dumps', 'loads', 'JSONDecoder', 'JSONEncoder')
-JSON_RENAMED = {'dumps':'jsondumps_', 'loads':'jsonloads_'}
 
 
 # python modules that may be installed by scripts with the install_() function
 # and their symbols (defined above)
+# The 'python' module is automatically installed
 MODULE_LIST = {'python':FROM_PY, 'math':FROM_MATH, 'time':FROM_TIME, 'numpy':FROM_NUMPY, 'base64':FROM_BASE64, 'json':FROM_JSON}
 
 ##############################################################################
 
+# replacement for type()
 def type_(obj, *varargs, **varkws):
     """type that prevents varargs and varkws"""
     return type(obj).__name__
@@ -206,6 +200,7 @@ def strcasecmp_(s1, s2):
     """case-insensitive string compare"""
     return (s1.casefold() == s2.casefold())
 
+# rename Python funcs
 LOCALFUNCS = {'type': type_, 'split':split_, 'strcasecmp':strcasecmp_}
 
 # Safe versions of functions to prevent denial of service issues
@@ -425,7 +420,8 @@ def make_symbol_table(modlist, **kwargs):
     symtable = {}
 
     # by default, we only install the Python built-ins
-    install_python_module(symtable, 'python', modlist)
+    # and these do NOT get an '_' appended
+    install_python_module(symtable, 'python', modlist, False)
 
     # install the special over-ride functions
     symtable.update(LOCALFUNCS)
@@ -440,7 +436,7 @@ def make_symbol_table(modlist, **kwargs):
 #
 # scripts call this as install_('modname')
 #
-def install_python_module(symtable, modname, modlist):
+def install_python_module(symtable, modname, modlist, rename=True):
     """Install a pre-defined Python module.
 
     This function will install one of the Python modules (listed in MODULE_LIST)
@@ -451,9 +447,10 @@ def install_python_module(symtable, modname, modlist):
     This is called by the install() function in asteval.py
 
         Args:
-            symtable    :   The symbol table to install into
-            modname     :   The module name to install
-            modlist     :   A list of currently-installed modules
+            symtable    :   The symbol table to install into.
+            modname     :   The module name to install.
+            modlist     :   A list of currently-installed modules.
+            rename      :   If True, add an '_' to each function name.
         Returns:
             The return value. True for success, False otherwise.
 
@@ -476,19 +473,7 @@ def install_python_module(symtable, modname, modlist):
     # get the allowed symbol list for the selected module
     md = MODULE_LIST[modname]
 
-    # rename some module functions to avoid conflicting
-    # with other modules
-
-    renames = {}
-
-    # modules with renames
-
-    if modname == 'time':
-        renames = TIME_RENAMED
-    if modname == 'numpy':
-        renames = NUMPY_RENAMED
-    if modname == 'json':
-        renames = JSON_RENAMED
+    # rename some module functions to match our convention
 
     try:
         # if not python, go and import the module
@@ -505,18 +490,27 @@ def install_python_module(symtable, modname, modlist):
         for k in modd:
             # if they're on the approved list
             if k in md:
-                if k in renames:
-                    sym = renames[k]
+                # if this module is flagged for rename:
+                if rename:
+                    # by default, add the _
+                    sym = k+'_'
                 else:
                     sym = k
                 # add to the temp table
                 lst[sym] = modd[k]
 
         symtable.update(lst)
-        modlist.append(modname)
+
+        # add the module name to the list (except 'python')
+        # it's in there by default, so render it invisible to the
+        # listModules_() function.
+        if modname != 'python':
+            modlist.append(modname)
 
         return True
+
     except ImportError as e:
+        # failed to import the module
         print(str(e))
 
     return False

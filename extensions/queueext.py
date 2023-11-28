@@ -288,6 +288,8 @@ class QueueExt():
                 The return value. True for success, False otherwise.
 
         """
+        if not value:
+            return False
 
         try:
             if name not in self.__queuenames:
@@ -328,6 +330,8 @@ class QueueExt():
                 The next value from the queue, or None.
 
         """
+
+        # TODO: add an option to raise() an exception on timeout
 
         try:
             if name not in self.__queuenames:
@@ -461,10 +465,17 @@ class ThreadQueue_():
 
     # Mark the queue closed
     def tqueue_close_(self):
+        # flag it as closed
         self.__closed = True
+        # wake up any sleeping gets()
+        q.put(None, block=False)
 
     # Add an item to the queue
     def tqueue_put_(self, value, **kwargs):
+
+        if self.__closed or value == None:
+            return False
+
         # put the queue object
         q = self.__queue
 
@@ -478,17 +489,23 @@ class ThreadQueue_():
             # if it's a blocking put
             if block:
                 count = 0
+                if self.__closed:
+                    return False
                 # loop until we succeed, timeout, or are closed
                 while count <= timeout and self.__closed == False:
                     try:
-                        # we try for 1 second
+                        if self.__closed:
+                            break
+                        # we try for 1 second each time
                         q.put(value,  block=True, timeout=1)
                         # success
-                        break
+                        return True
                     except:
                         # if timeout is not 0, bump the counter
                         if timeout > 0:
                             count += 1
+                # timout has expired
+                return False
             else:
                 # otherwise, just toss it in there and hope
                 q.put(value, block=False)
@@ -500,13 +517,17 @@ class ThreadQueue_():
 
     # Get an item from the queue and return it
     def tqueue_get_(self, **kwargs):
+
+        if self.__closed:
+            return None
+
         ret = None
         # get the queue object
         q = self.__queue
 
         try:
             block = True
-            timeout = 0
+            timeout = 0     # 0 means loop forever
             if kwargs:
                 block = kwargs.get('block', True)
                 timeout = kwargs.get('timeout', 0)
@@ -516,21 +537,31 @@ class ThreadQueue_():
                 count = 0
                 while count <= timeout and self.__closed == False:
                     try:
+                        if self.__closed:
+                            break
+                        # note that this is actually a 1-second timeout
+                        # this allows other activities in the engine to continue
                         ret = q.get(block=True, timeout=1)
                         break
                     except:
+                        # if it's not an infinite loop
                         if timeout > 0:
                             count += 1
+                # timeout expired
             else:
                 # non-blocking
                 ret = q.get(block=False)
         except:
-            oass
+            pass
         q.task_done()
         return ret
 
     # Remove all items from the queue
     def tqueue_clear_(self):
+
+        if self.__closed:
+            return False
+
         try:
             clearq__(self.__queue)
             return True
@@ -539,6 +570,9 @@ class ThreadQueue_():
 
     # Return the number of items in the queue
     def tqueue_len_(self):
+        if self.__closed:
+            return 0
+
         try:
             ret = self.__queue.qsize()
             return ret
@@ -547,6 +581,10 @@ class ThreadQueue_():
 
     # Return the empty state
     def tqueue_isempty_(self):
+
+        if self.__closed:
+            return False
+
         try:
             return self.__queue.empty()
         except:

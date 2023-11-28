@@ -56,6 +56,7 @@ You can see a list of the command-line arguments like this:
     -i, --initscript    A script to execute before the specified script
     -b, --basedir       Base directory for scripts (use , for multiple paths)
     -e, --extensiondir  Base directory for extensions (use , for multiple paths)
+    -o, --extensionopts A list of options key:value pairs to pass to extensions
     -p, --pidfile       A file with the shell's current PID
     -g, --global        All script variables are global
     -v, --verbose       Debug output
@@ -68,7 +69,7 @@ Apyshell will exit when the the script reaches it's end, or it gets a SIGINT or 
 
 If you have the scripts and extensions directories under the default '/opt/apyshell/' location, then you don't need any options.  just:
 
-    ./apyshell.py demo
+    /opt/apyshell/apyshell.py demo
 
 ### Modules
 

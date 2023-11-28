@@ -71,7 +71,8 @@ class ApyEngine():
 
         """Constructs an instance of the ApyEngine class.
 
-        Main entry point for apyengine.
+        Main entry point for apyengine.  It also installs all of the script-
+        callable utility functions.
 
             Args:
 
@@ -148,6 +149,9 @@ class ApyEngine():
         self.regcmd("listDefs_", self.listDefs_)
         self.regcmd("getvar_", self.getvar_)
         self.regcmd("setvar_", self.setvar_)
+
+        self.regcmd("stop_", self.stop_)
+
         self.regcmd("exit_", self.exit_)
 
     # dump the symbol table
@@ -586,9 +590,9 @@ class ApyEngine():
         except:
             return default
 
-    # returns the value of a script variable to the outer program
+    # returns the value of a script variable to the host program
     def getvar_(self, vname, default=None):
-        """ returns the value of a script variable to the outer program """
+        """ returns the value of a script variable to the host program """
 
         if not vname:
             return default
@@ -626,9 +630,18 @@ class ApyEngine():
                 return True
         return False
 
-    # exit the engine
-    def exit_(self, ret):
-        sys.exit(ret)
+    # stop running the current script and exit gracefully.
+    def stop_(self, ret=0):
+
+        # and save the return code where we can get it later
+        self.setSysVar_('exitcode_', ret)
+        # stop the script from executing
+        self.__ast.stoprun()
+        return ret
+
+    # exit the engine *and* it's host application abruptly
+    def exit_(self, ret=0):
+        sys.exit(int(ret))
 
 #----------------------------------------------------------------------
 #

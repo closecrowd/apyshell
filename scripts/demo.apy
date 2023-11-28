@@ -19,9 +19,12 @@ install_('time')
 #
 # and constants:
 #
-# _altzone, _timezone, _tzname, _daylight
+# altzone_, timezone_, tzname_, daylight_
 #
 #
+
+
+eval_('print("hi")')
 
 # grab the time and date
 t = asctime_(localtime_())

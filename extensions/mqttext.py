@@ -93,14 +93,17 @@ class MqttExt():
         There will be only once of these instances at a time.
 
         Args:
+
             api     : an instance of ExtensionAPI connecting us to the engine.
 
             options : a dict of option settings passed down to the extension.
 
         Returns:
+
             None
 
         Attributes:
+
             __api           : An instance of ExtensionAPI passed by the host, used
                                 to call back into the engine.  Copied from api.
 

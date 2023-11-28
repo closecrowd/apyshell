@@ -74,10 +74,10 @@ class FileExt():
                                 filenames, restricting access to files
                                 below this point.
 
-                    'read_only' = If True,  the writeLines_ and
-                              appendLines_ commands are not installed.
+                    'read_only' = If True, the writeLines_ and
+                              appendLines_ functions are not installed.
 
-                    'list_dirs' - If True, allows the list_dirs_ call
+                    'list_files' - If True, allows the list_files_ call
 
         """
 
@@ -88,11 +88,11 @@ class FileExt():
         if options:
             self.__fileroot = options.get('file_root', None)
             self.__readonly = options.get('read_only', False)
-            self.__listdirs = options.get('list_dirs', True)
+            self.__listfiles = options.get('list_files', True)
         else:
             self.__fileroot = None
             self.__readonly = False
-            self.__listdirs = True
+            self.__listfiles = True
 
     def register(self):
         """Make this extension's functions available to scripts
@@ -130,7 +130,7 @@ class FileExt():
         if not self.__readonly:
             self.__cmddict['writeLines_'] = self.writeLines_
             self.__cmddict['appendLines_'] = self.appendLines_
-        if self.__listdirs:
+        if self.__listfiles:
             self.__cmddict['listFiles_'] = self.listFiles_
 
         # register the extensions script functions
@@ -204,11 +204,12 @@ class FileExt():
         try:
             # no handler
             if not handler:
-                # slurp it all in at once - mind the memory
+                # slurp it all in at once - mind the memory...
                 with open(fp,  'r') as f:
                     data = f.read()
                 return data
             else:
+                # sending lines throiugh a handler function
                 cnt = 0
                 with open(fp,  'r') as f:
                     cnt = 0
@@ -325,8 +326,6 @@ class FileExt():
         else:
             fp = '.'
 
-        print(fp)
-
         flist = os.listdir(fp)
         return flist
 
@@ -360,21 +359,19 @@ def typeWrite(f,  data):
     return None
 
 
-def lineWriter(api,  fp, data, handler=None, maxlines=0,  mode='w'):
-    ''' Write lines to a file in either overwite or append mode
+def lineWriter(api, fp, data, handler=None, maxlines=0,  mode='w'):
+    """Write lines to a file in either overwite or append mode
 
-        Parameters
-        ----------
+            Args:
+                fp          : Filepath to write to
+                data        : Data to write if no handler
+                handler
+                maxlines    : Max number of lines to write
+                mode        : "w" - overwrite. "a" - append
 
-        fp
-        data
-        handler
-        maxlines
-        mode
-        Returns
-        -------
+            Returns:
 
-    '''
+    """
     try:
         if not handler:
             with open(fp,  mode) as f:

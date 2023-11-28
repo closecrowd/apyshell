@@ -10,10 +10,10 @@
 # load the extension
 loadExtension_('utilext')
 
-# prompt the user to enter something.  If they don't withint 5 seconds,
+# prompt the user to enter something.  If they don't within 5 seconds,
 # the string "time!" will be be returned
 try:
-  f = input_('type something ', '--', timeout=5, todef='time!', toraise=False)
+  f = input_('type something ', '--', timeout=5, todef='time!', toraise=True)
   print('you typed:', f)
 except Exception as e:
   print('exception:', str(e), prefix=None)
