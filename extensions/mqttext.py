@@ -7,7 +7,7 @@ to topics, and subscribe to topics.  Incoming messages on subscribed
 topics may be delivered by polling, or by callbacks.
 
 The link to a broker is represented by a connection name.  Each
-connection is seperate from the others, and each may have multiple
+connection is separate from the others, and each may have multiple
 topics subscribed to it.
 
 Make the functions available to a script by adding:
@@ -64,10 +64,9 @@ from extensionapi import *
 
 __key__ = 'mqttext'
 __cname__ = 'MqttExt'
-
 MODNAME="mqttext"
 
-defaultName = 'mqttconn'
+#defaultName = 'mqttconn'
 
 ##############################################################################
 
@@ -166,15 +165,15 @@ class MqttExt():
         try:
             self.__cmddict['mqtt_connect_'] = self.connect_
             self.__cmddict['mqtt_disconnect_'] = self.disconnect_
-
-            self.__cmddict['mqtt_list_'] = self.listConns_
+            self.__cmddict['mqtt_isrunning_'] = self.isrunning_
 
             self.__cmddict['mqtt_subscribe_'] = self.subtopic_
             self.__cmddict['mqtt_unsubscribe_'] = self.unsubtopic_
-            self.__cmddict['mqtt_isrunning_'] = self.isrunning_
             self.__cmddict['mqtt_waiting_'] = self.waiting_
             self.__cmddict['mqtt_readmsg_'] = self.readmsg_
             self.__cmddict['mqtt_sendmsg_'] = self.sendmsg_
+
+            self.__cmddict['mqtt_list_'] = self.listConns_
 
             self.__api.registerCmds(self.__cmddict)
         except Exception as e:
@@ -212,7 +211,7 @@ class MqttExt():
 #----------------------------------------------------------------------
 
     # connect to a broker
-    def connect_(self, cname=defaultName, **kwargs):
+    def connect_(self, cname, **kwargs):
         """Handles the mqtt_connect_() function.
 
         Create a connection object and establish a connection to a broker.
@@ -231,7 +230,7 @@ class MqttExt():
 
         debugMsg(MODNAME, 'mqtt:connect:',kwargs, type(kwargs))
 
-        # check the format of the connectionname
+        # check the format of the connection name
         if not checkFileName(cname):
             return retError(self.__api, MODNAME, 'invalid name:'+cname, False)
 
@@ -245,7 +244,7 @@ class MqttExt():
         return m.connect_(**kwargs)
 
     # drop a broker
-    def disconnect_(self, cname=defaultName):
+    def disconnect_(self, cname):
         """Handles the mqtt_disconnect_() function.
 
         Closes an open connection to a broker, and removes the connection
@@ -261,14 +260,100 @@ class MqttExt():
 
         """
 
-        debugMsg(MODNAME, "mqtt disconnect")
+        # check the format of the connection name
+        if not checkFileName(cname):
+            return retError(self.__api, MODNAME, 'invalid name:'+cname, False)
 
+        # check for unknown connection name
         if cname not in self.__conns.keys():
             return retError(self.__api, MODNAME, 'name not found:'+cname, False)
 
         self.__conns[cname].disconnect_()
         del self.__conns[cname]
         return True
+
+    # connection active?
+    def isrunning_(self, cname):
+
+        # check the format of the connection name
+        if not checkFileName(cname):
+            return retError(self.__api, MODNAME, 'invalid name:'+cname, False)
+
+        # check for unknown connection name
+        if cname not in self.__conns.keys():
+            return retError(self.__api, MODNAME, 'name not found:'+cname, False)
+
+        return self.__conns[cname].isrunning_()
+
+
+    # subscribe to a topic
+    def subtopic_(self, cname, topic, handler=None, qos=0):
+
+        debugMsg(MODNAME, 'mqtt:sub:',  cname,  topic)
+
+        # check the format of the connection name
+        if not checkFileName(cname):
+            return retError(self.__api, MODNAME, 'invalid name:'+cname, False)
+
+        # check for unknown connection name
+        if cname not in self.__conns.keys():
+            return retError(self.__api, MODNAME, 'name not found:'+cname, False)
+
+        return self.__conns[cname].subtopic_(topic, handler, qos)
+
+    # cancel the subscription
+    def unsubtopic_(self, cname, topic):
+
+        # check the format of the connection name
+        if not checkFileName(cname):
+            return retError(self.__api, MODNAME, 'invalid name:'+cname, False)
+
+        # check for unknown connection name
+        if cname not in self.__conns.keys():
+            return retError(self.__api, MODNAME, 'name not found:'+cname, False)
+
+        return self.__conns[cname].unsubtopic_(topic)
+
+
+    # number of messages waiting
+    def waiting_(self, cname):
+
+        # check the format of the connection name
+        if not checkFileName(cname):
+            return retError(self.__api, MODNAME, 'invalid name:'+cname, False)
+
+        # check for unknown connection name
+        if cname not in self.__conns.keys():
+            return retError(self.__api, MODNAME, 'name not found:'+cname, False)
+
+        return self.__conns[cname].waiting_()
+
+    # read the next avail msg from the queue
+    def readmsg_(self, cname, blocking=True, timeout=1):
+        debugMsg(MODNAME, "mqtt read:", cname)
+
+        # check the format of the connection name
+        if not checkFileName(cname):
+            return retError(self.__api, MODNAME, 'invalid name:'+cname, False)
+
+        # check for unknown connection name
+        if cname not in self.__conns.keys():
+            return retError(self.__api, MODNAME, 'name not found:'+cname, False)
+
+        return self.__conns[cname].readmsg_(blocking, timeout)
+
+    # post a messsage to a topic
+    def sendmsg_(self, cname, dest, data):
+
+        # check the format of the connection name
+        if not checkFileName(cname):
+            return retError(self.__api, MODNAME, 'invalid name:'+cname, False)
+
+        # check for unknown connection name
+        if cname not in self.__conns.keys():
+            return retError(self.__api, MODNAME, 'name not found:'+cname, False)
+
+        return self.__conns[cname].sendmsg_(dest, data)
 
     # list the active connections
     def listConns_(self):
@@ -284,56 +369,6 @@ class MqttExt():
                 None if there was an error.
         '''
         return list(self.__conns.keys())
-
-    # subscribe to a topic
-    def subtopic_(self, cname=defaultName, topic=None, handler=None, qos=0):
-        debugMsg(MODNAME, 'mqtt:sub:',  cname,  topic)
-
-        if cname not in self.__conns.keys():
-            return retError(self.__api, MODNAME, 'name not found:'+cname, False)
-
-        return self.__conns[cname].subtopic_(topic, handler, qos)
-
-    # cancel the subscription
-    def unsubtopic_(self, cname=defaultName, topic=None):
-
-        if cname not in self.__conns.keys():
-            return retError(self.__api, MODNAME, 'name not found:'+cname, False)
-
-        return self.__conns[cname].unsubtopic_(topic)
-
-    # connection active?
-    def isrunning_(self, cname=defaultName):
-
-        if cname not in self.__conns.keys():
-            return retError(self.__api, MODNAME, 'name not found:'+cname, False)
-
-        return self.__conns[cname].isrunning_()
-
-    # number of messages waiting
-    def waiting_(self, cname=defaultName):
-
-        if cname not in self.__conns.keys():
-            return retError(self.__api, MODNAME, 'name not found:'+cname, False)
-
-        return self.__conns[cname].waiting_()
-
-    # read the next avail msg from the queue
-    def readmsg_(self, cname=defaultName, blocking=True, timeout=1):
-        debugMsg(MODNAME, "mqtt read:", cname)
-
-        if cname not in self.__conns.keys():
-            return retError(self.__api, MODNAME, 'name not found:'+cname, False)
-
-        return self.__conns[cname].readmsg_(blocking, timeout)
-
-
-    def sendmsg_(self, cname=defaultName, dest=None, data=None):
-
-        if cname not in self.__conns.keys():
-            return retError(self.__api, MODNAME, 'name not found:'+cname, False)
-
-        return self.__conns[cname].sendmsg_(dest, data)
 
 
 #----------------------------------------------------------------------
@@ -515,6 +550,7 @@ class MqttConnection():
 
     # send a message to a topic (or topics)
     def sendmsg_(self, dest, data, qos=0, retain=False):
+
         if self.__client == None:
             return False
         if not self.__connected:
@@ -530,17 +566,24 @@ class MqttConnection():
 
         rv = True
         # dest topics may be a list
-        if dest[0] == '[':
-            l = dest[1:-1].split(',')
-            if len(l) < 1:
-                return False
-            # walk the list and send to all the topics
-            for topic in l:
-                 ret =self.__client.publish(topic, payload=data, qos=qos, retain=retain)
-                 rv = ret.is_published
+        if isinstance(dest, list):
+            l = dest
         else:
-            ret = self.__client.publish(dest, payload=data, qos=qos, retain=retain)
-            rv = ret.is_published
+            # or a string representation of a list
+            if dest[0] == '[':
+                l = dest[1:-1].split(',')
+            else:
+                # or just a single string - make it a list
+                l = list()
+                l.append(dest)
+
+        if len(l) < 1:
+            return False
+
+        # walk the list and send to all the topics
+        for topic in l:
+            self.__client.publish(topic, payload=data, qos=qos, retain=retain)
+#            rv = ret.is_published
         return rv
 
 
@@ -614,7 +657,7 @@ class MqttConnection():
         debugMsg(MODNAME, "on_disconnect:", rc)
         self.__connected = False
 
-    # general massage callback
+    # general message callback
     def on_message(self, client, userdata, message):
         # tuple is mqtt params plus conn name
         intup = (str(message.payload.decode("utf-8")), message.topic, message.qos, message.retain, self.__name )
@@ -684,4 +727,5 @@ def topicmatch(subsc, topic):
             return False
 
     return True
+
 
