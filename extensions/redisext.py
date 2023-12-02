@@ -2,7 +2,7 @@
 """redisext - basic interface to the Redis cache.
 
 This extension provides a client connection to a redis in-memory
-cache.  Not all redis functions are avaiable (there are a *lot* of
+cache.  Not all redis functions are available (there are a *lot* of
 them), but a lot of the useful ones are included.
 
 Familiarity with redis is helpful. See: https://redis.io/commands/
@@ -240,7 +240,7 @@ class RedisExt():
 #
 #----------------------------------------------------------------------
 
-    def connect_(self, cname=defaultName, host='127.0.0.1', port=6379, **kwargs):
+    def connect_(self, cname, host='127.0.0.1', port=6379, **kwargs):
         """Handles the redis_connect_() function.
 
         This function establishes a named connection to a redis server.
@@ -273,7 +273,7 @@ class RedisExt():
 
             m = RedisConnection(cname, self.__api)
             if m != None:
-                cflag = m.connect_(host, port)
+                cflag = m.connect_(host, port, **kwargs)
                 if cflag == True:
                     self.__conns[cname] = m
                     unlock__(self.__lock)
@@ -287,7 +287,7 @@ class RedisExt():
             return retError(self.__api, MODNAME, 'Error in connect_ '+'"'+cname+'":'+str(e), False)
         return False
 
-    def disconnect_(self, cname=defaultName):
+    def disconnect_(self, cname):
         """Handles the redis_disconnect_() function.
 
         Closes an open connection to a redis server and
@@ -487,10 +487,11 @@ class RedisConnection():
         self.__host = '127.0.0.1'       # default redis server
         self.__port = 6379              # and port
         self.__db = 0
+        self.__decode_responses = True
 
         self.__client = None
 
-    def connect_(self, host='127.0.0.1', port=6379, db=0):
+    def connect_(self, host='127.0.0.1', port=6379, **kwargs):
         """Connect to the Redis server."""
 
         if self.__client != None:
@@ -501,12 +502,12 @@ class RedisConnection():
 
         self.__host = host
         self.__port = port
-        self.__db = db
+
+        self.__db = kwargs.get('db', 0)
+        self.__decode_responses = kwargs.get('decode_responses', True)
 
 # things we might use in the future
 #        args = {}
-#        args['db'] = kwargs.get('db', 0)
-#        args['decode_responses'] = kwargs.get('decode_responses', True)
 #        args['retry_on_timeout'] = kwargs.get('retry_on_timeout', True)
 #        args['health_check_interval'] = kwargs.get('health_check_interval', 0)
 #        args['username'] = kwargs.get('username', None)
@@ -514,7 +515,8 @@ class RedisConnection():
 #        args[''] = kwargs.get('', True)
 
         try:
-            self.__client = redis.Redis( host=host, port=port, db=db, decode_responses=True)
+            self.__client = redis.Redis( host=host, port=port,
+                    db=self.__db, decode_responses=self.__decode_responses)
         except Exception as ex:
             print(str(ex))
             self.__client = None

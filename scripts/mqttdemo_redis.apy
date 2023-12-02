@@ -42,10 +42,10 @@ rname = 'redisdemo'
 alltopic = 'link/iot/c2/#'
 
 # This is the IP address of our broker.
-brokerip = '127.0.0.1'
+brokerip = 'mqttb1'
 
 # This is the IP of a handy redis server
-cacheip = '127.0.0.1'
+cacheip = 'mqttb1'
 
 
 # Crickets report temp in C (they're British).  Convert

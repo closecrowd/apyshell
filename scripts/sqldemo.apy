@@ -59,6 +59,21 @@ for cnt in range(1, 11):
 # print how many updates we made to the db
 print('changes:', sql_changes_(sqlconn))
 
+#
+# Now we demonstrate reading that data OUT of the database:
+#
+
+# execute a query to get the data we put ion
+cur = sql_execute_(sqlconn, "select * from demotime;")
+
+# and pull all the rows out into a list[] of tuples()
+retlist = sql_cursor_fetch_(sqlconn, cur, count=0)
+# if we got any, that is
+if retlist:
+  for row in retlist:
+    print(row)
+
+
 # all done - close up
 rv = sql_close_(sqlconn)
 
@@ -80,18 +95,29 @@ exit_(0)
 # -->  9
 # -->  10
 # -->  changes: 10
+# -->  (1, 'Fri Dec  1 21:49:22 2023', None)
+# -->  (2, 'Fri Dec  1 21:49:24 2023', None)
+# -->  (3, 'Fri Dec  1 21:49:26 2023', None)
+# -->  (4, 'Fri Dec  1 21:49:28 2023', None)
+# -->  (5, 'Fri Dec  1 21:49:30 2023', None)
+# -->  (6, 'Fri Dec  1 21:49:32 2023', None)
+# -->  (7, 'Fri Dec  1 21:49:34 2023', None)
+# -->  (8, 'Fri Dec  1 21:49:36 2023', None)
+# -->  (9, 'Fri Dec  1 21:49:38 2023', None)
+# -->  (10, 'Fri Dec  1 21:49:41 2023', None)
 # 
 # And this is what the database holds:
 #
 # sqlite3 /tmp/demodb.db 'select * from demotime;'
-# 1|Tue Nov 14 12:41:21 2023|
-# 2|Tue Nov 14 12:41:23 2023|
-# 3|Tue Nov 14 12:41:25 2023|
-# 4|Tue Nov 14 12:41:27 2023|
-# 5|Tue Nov 14 12:41:29 2023|
-# 6|Tue Nov 14 12:41:31 2023|
-# 7|Tue Nov 14 12:41:33 2023|
-# 8|Tue Nov 14 12:41:35 2023|
-# 9|Tue Nov 14 12:41:37 2023|
-# 10|Tue Nov 14 12:41:39 2023|
 # 
+# 1|Fri Dec  1 21:49:22 2023|
+# 2|Fri Dec  1 21:49:24 2023|
+# 3|Fri Dec  1 21:49:26 2023|
+# 4|Fri Dec  1 21:49:28 2023|
+# 5|Fri Dec  1 21:49:30 2023|
+# 6|Fri Dec  1 21:49:32 2023|
+# 7|Fri Dec  1 21:49:34 2023|
+# 8|Fri Dec  1 21:49:36 2023|
+# 9|Fri Dec  1 21:49:38 2023|
+#10|Fri Dec  1 21:49:41 2023|
+

@@ -343,7 +343,7 @@ class MqttExt():
         return self.__conns[cname].readmsg_(blocking, timeout)
 
     # post a messsage to a topic
-    def sendmsg_(self, cname, dest, data):
+    def sendmsg_(self, cname, dest, data, qos=0, retain=False):
 
         # check the format of the connection name
         if not checkFileName(cname):
@@ -353,7 +353,7 @@ class MqttExt():
         if cname not in self.__conns.keys():
             return retError(self.__api, MODNAME, 'name not found:'+cname, False)
 
-        return self.__conns[cname].sendmsg_(dest, data)
+        return self.__conns[cname].sendmsg_(dest, data, qos, retain)
 
     # list the active connections
     def listConns_(self):

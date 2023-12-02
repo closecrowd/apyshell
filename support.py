@@ -97,6 +97,9 @@ def sanitizePath(path):
     # strip out \\
     while path and '\\' in path:
         path = path.replace('\\',  '')
+    # strip out ..
+    while path and '..' in path:
+        path = path.replace('..',  '')
     # strip out |
     while path and '|' in path:
         path = path.replace('|',  '')
