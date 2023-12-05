@@ -47,7 +47,7 @@ Note:
         redis
 
 Credits:
-    * version: 1.0
+    * version: 1.0.0
     * last update: 2023-Nov-20
     * License:  MIT
     * Author:  Mark Anacker <closecrowd@pm.me>

@@ -21,7 +21,7 @@ Methods:
 * may be disabled by option settings
 
 Credits:
-    * version: 1.0
+    * version: 1.0.0
     * last update: 2023-Nov-13
     * License:  MIT
     * Author:  Mark Anacker <closecrowd@pm.me>

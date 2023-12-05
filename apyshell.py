@@ -9,7 +9,7 @@ to scripts.
 It can be run either stand-alone, or itself embedded into an application.
 
 Credits:
-    * version: 1.0
+    * version: 1.0.0
     * last update: 2023-Nov-21
     * License:  MIT
     * Author:  Mark Anacker <closecrowd@pm.me>
@@ -33,7 +33,7 @@ from extensionmgr import *
 # Globals
 #
 
-VERSION = "1.0"
+VERSION = "1.0.0"
 
 # default directory paths
 basedir = '/opt/apyshell/scripts'           # script base directory

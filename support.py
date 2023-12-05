@@ -4,7 +4,7 @@
 This file contains various utility functions used by apyshell.
 
 Credits:
-    * version: 1.0
+    * version: 1.0.0
     * last update: 2023-Nov-21
     * License:  MIT
     * Author:  Mark Anacker <closecrowd@pm.me>

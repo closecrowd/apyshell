@@ -27,9 +27,11 @@ The code is fully functional, and the documentation is in process.  Expect updat
 
 ### Installation
 
-Until the setup.py installer is finished, just grab the files from GitHub into a local directory.  
+Before you install apyshell, you’ll need to download and install “**apyengine**”.  Clone that project from [GitHub](https://github.com/closecrowd/apyengine) into a local directory. Change to the directory, and run “pip install .” to install the engine core. 
 
-The default directories for scripts and extension files are set in apyshell.py:
+Next, clone the **apyshell** project from [GitHub](https://github.com/closecrowd/apyshell) into a local directory.  Make any changes that you need to apyshell.py – particularly the default directory paths and extension options.  Then copy the entire directory tree to your desired location.  I use “/opt/apyshell” by default, but you may change the paths.
+
+The default directories for scripts and extension files in apyshell.py are: 
 
 ~~~python
 # default directory paths
