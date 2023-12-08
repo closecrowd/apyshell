@@ -380,7 +380,7 @@ class SqLiteExt():
                 cname   :   The name of the connection to commit.
 
             Returns:
-                The return value. True for success, False otherwise.
+                True for success, False otherwise.
 
         """
 
