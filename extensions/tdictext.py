@@ -427,24 +427,65 @@ class TDictExt():
         Returns a list with the keys in the named dict.
 
             Args:
-                None
+                cname   :   The name of the dict to use.
 
             Returns:
                 A list[] of keys in the dict.  The list may be empty
                 if there are none.
 
                 None if there was an error.
+
         """
 
         return self.tdict_cmd('keys', cname)
 
     def tdict_items_(self, cname):
+        """Handles the tdict_items_() function.
+
+        Returns a list of every item in the dict, in the form of a
+        tuple with (key,value) for each..
+
+            Args:
+                cname   :   The name of the dict to use.
+
+            Returns:
+                A list with items in the dict, or an empty list if
+                there are none.
+
+        """
+
         return self.tdict_cmd('items', cname)
 
     def tdict_len_(self, cname):
+        """Handles the tdict_len_() function.
+
+        Returns the number of items currently in the tdict.
+
+            Args:
+                cname   :   The name of the dict to use.
+
+            Returns:
+                An int with the number of items.
+
+        """
+
         return self.tdict_cmd('len', cname)
 
     def tdict_copy_(self, cname):
+        """Handles the tdict_copy_() function.
+
+        Returns a standard Python dict object with a shallow copy of
+        the contents of the specified tdict.
+
+            Args:
+                cname   :   The name of the dict to use.
+
+            Returns:
+                A Python dict with the contents of this tdict.
+
+                None if there was an error.
+
+        """
         return self.tdict_cmd('copy', cname)
 
     # list all current dicts
@@ -528,6 +569,7 @@ class ThreadDict_():
             elif cmd == 'len':
                 ret = len(self.__storage)
             elif cmd == 'copy':
+                ret = None
                 ret = self.__storage.copy()
 
             unlock__(self.__lock)

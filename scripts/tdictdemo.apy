@@ -1,0 +1,63 @@
+#
+# tdictdemo.apy
+#
+# This script demos creating and using a thread-safe dict
+# from the tdict Extension.  All of the operations are
+# protected by locks to make then thread-safe.
+#
+# Mark Anacker <closecrowd@pm.me>
+# --------------------------------------------------------------------
+
+# make the time commands available
+install_('time')
+
+#
+# Load the tdictext.py extension - if this invocation of
+# apyshell.py has it available in the designated extensions
+# directory.  By default, it would be.
+#
+e = loadExtension_('tdictext')
+if not e:
+    print('Failed to load the tdict extension!')
+    exit_(1)
+
+# create a dictionary
+td = tdict_open_('mydict')
+
+# put some data in it
+print('filling')
+for n in range(0,20):
+    tdict_put_('mydict', str(n), asctime_(localtime_()))
+    # we delay 1 second so the timestamp changes
+    sleep_(1)
+
+# and get it back out
+print('dumping')
+
+print('there are',tdict_len_('mydict'),'items')
+print('')
+print('items in mydict:',tdict_items_('mydict'))
+print('')
+print('all keyskeys:',tdict_keys_('mydict'))
+
+# make a standard Python dict with a copy of the
+# items in the tdict.
+pd = tdict_copy_('mydict')
+print('created Python dict:', type(pd))
+
+# open a new tdict
+b = tdict_open_('newdict')
+# if it's opened
+if b:
+    # mass-update it with items from the old one
+    # this essentially makes a Python dict, then loads that
+    # copy into the tdict.
+    tdict_update_('newdict', tdict_copy_('mydict'))
+    print('items in newdict:',tdict_items_('newdict'))
+    # and close it
+    tdict_close_('newdict')
+
+# close the original dict
+tdict_close_('mydict')
+
+
