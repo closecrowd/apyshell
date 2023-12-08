@@ -120,6 +120,7 @@ Currently available are:
 
 - utilext - A utility extension with several useful functions
 
+- tdictext - Creates and manages thread-safe dictionaries
 
 There are many more completed or in development.  They will be published to the GitHub repo as soon as their documentation is finished.
 
