@@ -361,8 +361,11 @@ class MqttExt():
         Return a list[] of open connections.
 
             Args:
+
                 None
+
             Returns:
+
                 A list[] of active connections.  The list may be empty if
                 there are no connections.
 

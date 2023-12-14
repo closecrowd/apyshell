@@ -1,0 +1,110 @@
+#
+# httpdemo.apy
+#
+# This apyshell script demonstrates the http client extension.
+#
+# Mark Anacker  closecrowd@pm.me
+# -------------------------------------------------------------------
+
+# install the time module so we can sleep_()
+install_('time')
+
+# install the JSON module to parse returns
+install_('json')
+
+
+#
+# Load the httpext.py extension - if this invocation of
+# apyshell.py has it available in the designated extensions
+# directory.  By default, it would be.
+#
+e = loadExtension_('httpext')
+if not e:
+    print('Failed to load the http extension!')
+    exit_(1)
+
+#
+# There are possibly 2 client modes available:
+#   1 - Python's requests module
+#   2 - Python's http.client module
+#
+# If both are installed, the default is to use requests (1), since
+# it's more capable.  This is how your script can find out what
+# modes are available:
+#
+
+modes = http_modes_()
+print('Client modes available:', modes[0],'and default:',modes[1])
+
+
+#
+# httpext supports ONLY http and https requests.  This is what
+# happens when someone tries another scheme:
+#
+
+res = http_get_('FILE:///etc/hosts')
+print('FILE:// results:', res)
+
+#
+# Set up some values for our next operations
+#
+
+# Let's get the Useless Fact of the Day
+URL = 'https://uselessfacts.jsph.pl/api/v2/facts/today'
+
+# This is the header that will be sent with each request, instead of the default
+heads  = {"Content-type": "text/plain; charset=UTF-8",
+           "Accept": "text/plain", "Connection": "close",
+           "Accept-Language": "en-US,en;q=0.5",
+           "Upgrade-Insecure-Requests" : "1",
+           "DNT" : "1",
+           "User-Agent": "Opera/9.80 (Android 2.3.4; Linux; Opera Mobi/build-1107180945; U; en-GB) Presto/2.8.149 Version/11.10" }
+
+#
+# Practice some GETS...
+#
+
+print('Client mode 1, simple=True')
+r = http_get_(URL,client=1, headers=heads, simple=True)
+print(str(r),prefix=None)
+print(prefix=None)
+
+sleep_(2)
+print('------------------------', prefix=None)
+
+print('Client mode 1, simple=False')
+r = http_get_(URL,client=1, headers=heads, simple=False)
+print(str(r),prefix=None)
+print(prefix=None)
+
+sleep_(2)
+print('------------------------', prefix=None)
+
+print('Client mode 2, simple=True')
+r = http_get_(URL,client=2, headers=heads, simple=True)
+print(str(r),prefix=None)
+print(prefix=None)
+
+sleep_(2)
+print('------------------------', prefix=None)
+
+print('Client mode 2, simple=False')
+r = http_get_(URL,client=2, headers=heads, simple=False)
+print(str(r),prefix=None)
+print(prefix=None)
+
+sleep_(2)
+print('------------------------', prefix=None)
+
+#
+# Some other methods
+#
+
+# if we have mode 1 available
+if modes[1] == 1:
+
+    print('Request - HEAD')
+    r = http_request_('HEAD', 'https://uselessfacts.jsph.pl/', headers=heads)
+    print(str(r),prefix=None)
+    print(prefix=None)
+

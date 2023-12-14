@@ -115,11 +115,9 @@ class FileExt():
             None
 
         Returns
-            True        :   Commands are installed and the extension is
-                            ready to use.
+            True        :   Commands are installed and the extension is ready to use.
 
-            False       :   Commands are NOT installed, and the extension
-                            is inactive.
+            False       :   Commands are NOT installed, and the extension is inactive.
 
         """
 

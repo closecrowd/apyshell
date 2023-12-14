@@ -79,6 +79,7 @@ Sometimes, you need some functionality that doesn't fit well into the Extension 
 
 Modules currently available are:
 
+- math
 - numpy
 - time
 - json
@@ -109,6 +110,8 @@ There are many extensions in development.  They'll be added to the GitHub repo a
 Currently available are:
 
 - mqttext - A full-featured MQTT client
+
+- httpext - A versatile HTTP/HTTPS client
 
 - redisext - A Redis cache client
 

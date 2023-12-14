@@ -166,14 +166,14 @@ class SqLiteExt():
                 * sql_list_()         :   Return a list[] of the active connection names
 
         Args:
+
             None
 
         Returns
-            True        :   Commands are installed and the extension is
-                            ready to use.
 
-            False       :   Commands are NOT installed, and the extension
-                            is inactive.
+            True        :   Commands are installed and the extension is ready to use.
+
+            False       :   Commands are NOT installed, and the extension is inactive.
 
         """
 
@@ -238,6 +238,7 @@ class SqLiteExt():
         as calling this extension from multiple threads (which is supported).
 
             Args:
+
                 cname       :   The connection name to use. Must not be in use.
 
                 dbname      :   The Sqlite3 database file to use.
@@ -245,14 +246,16 @@ class SqLiteExt():
                 **kwargs    :   Options to pass down to sqlite3.
 
             Returns:
+
                 True if the database was opened.
 
                 False if an error occurred.
 
             Options:
-                    autocommit          : If True, write the changes to the file after every change. Default=True.
 
-                    check_same_thread   : If True, restrict callers to a single thread. Default=False.
+                autocommit          : If True, write the changes to the file after every change. Default=True.
+
+                check_same_thread   : If True, restrict callers to a single thread. Default=False.
 
         """
 
@@ -313,9 +316,11 @@ class SqLiteExt():
         Close an open db connection and remove the connection from the table.
 
             Args:
+
                 cname   :   The name of the connection to remove.
 
             Returns:
+
                 The return value. True for success, False otherwise.
 
         """
@@ -350,6 +355,7 @@ class SqLiteExt():
         Execute a SQL statement in an open db.
 
             Args:
+
                 cname       :   The connection name to use.
 
                 sql         :   The SQL statement to execute.
@@ -359,6 +365,7 @@ class SqLiteExt():
                 **kwargs    :   Options to pass down to sqlite3.
 
             Returns:
+
                 A cursor reference if successful.
 
                 None if there was an error.
@@ -377,9 +384,11 @@ class SqLiteExt():
         this function has no effect.
 
             Args:
+
                 cname   :   The name of the connection to commit.
 
             Returns:
+
                 True for success, False otherwise.
 
         """
@@ -400,9 +409,11 @@ class SqLiteExt():
         autocommit is True, this function has no effect.
 
             Args:
+
                 cname   :   The name of the connection to use.
 
             Returns:
+
                 The return value. True for success, False otherwise.
 
         """
@@ -419,9 +430,11 @@ class SqLiteExt():
        opened.
 
             Args:
+
                 cname   :   The name of the connection to use.
 
             Returns:
+
                 The number of updates in this session.
 
                 -1 if there was an error.
@@ -439,6 +452,7 @@ class SqLiteExt():
         Return one or many rows from the supplied cursor (returned by sql_execute_()).
 
             Args:
+
                 cname   :   The name of the connection to use.
 
                 cursor  :   The cursor reference returned by sql_execute_().
@@ -450,6 +464,7 @@ class SqLiteExt():
                                 * >0 = gets all rows <n> at a time as a list of tuples.
 
             Returns:
+
                 The requested number of rows, None if an error occurred.
 
         """
@@ -466,9 +481,11 @@ class SqLiteExt():
         Returns a list with the names of all current connections.
 
             Args:
+
                 None
 
             Returns:
+
                 A list[] of active connections.  The list may be empty if
                 there are no connections.
 
