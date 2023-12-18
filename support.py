@@ -5,7 +5,7 @@ This file contains various utility functions used by apyshell.
 
 Credits:
     * version: 1.0.0
-    * last update: 2023-Nov-21
+    * last update: 2023-Dec-14
     * License:  MIT
     * Author:  Mark Anacker <closecrowd@pm.me>
     * Copyright (c) 2023 by Mark Anacker
@@ -65,7 +65,7 @@ def checkFileName(fname):
 
     """
 
-    if not fname or len(fname) < 1:
+    if not fname or len(fname) < 1 or len(fname) > 256:
         return False
 
     return all(char in VALIDCHARS for char in fname)
@@ -87,7 +87,7 @@ def sanitizePath(path):
 
     """
 
-    if not path or len(path) < 1:
+    if not path or len(path) < 1 or len(path) > 4096:
         return None
 
     #

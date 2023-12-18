@@ -1,0 +1,56 @@
+#
+# flagdemo.apy
+#
+# This apyshell script demonstrates the flag extension.  This shows
+# the basic operation, but only in a single thread.  Flags are really
+# only useful when there are multiple threads in the script.
+#
+# Mark Anacker  closecrowd@pm.me
+# -------------------------------------------------------------------
+
+#
+# Load the httpext.py extension - if this invocation of
+# apyshell.py has it available in the designated extensions
+# directory.  By default, it would be.
+#
+e = loadExtension_('flagext')
+if not e:
+    print('Failed to load the flag extension!')
+    exit_(1)
+
+# create a named flag
+r = flag_add_('fname')
+print('Add flag:', r)
+
+# check it's status
+r = flag_israised_('fname')
+print('Flag raised:', r)
+
+# okay, now raise it
+r = flag_raise_('fname')
+print('Flag raise:', r)
+
+r = flag_israised_('fname')
+print('Flag raised:', r)
+
+# wait up to 3 seconds for the flag to raise,
+# then lower it on the way out.  This should
+# return True, since we just raised it.
+r = flag_wait_('fname', 3.0, postlower=True)
+print('Flag wait return 1:', r)
+
+r = flag_israised_('fname')
+print('Flag raised:', r)
+
+# this time, wait 3 seconds for the flag.  This
+# will return False, since the flag will stay 
+# lowered.
+r = flag_wait_('fname', 3.0)
+print('Flag wait return 2:', r)
+
+# now clean up
+flag_del_('fname')
+
+
+
+

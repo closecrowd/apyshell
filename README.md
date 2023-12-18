@@ -119,6 +119,8 @@ Currently available are:
 
 - queueext - A utility extension providing thread-safe queues (FIFO and LIFO)
 
+- flagext - Provides a semaphore-like facility to signal and synchronize threads.
+
 - fileext - Simple path-restricted text file operations
 
 - utilext - A utility extension with several useful functions

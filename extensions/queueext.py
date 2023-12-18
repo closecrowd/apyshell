@@ -18,6 +18,7 @@ Make the functions available to a script by adding:
 to it.  Functions exported by this extension:
 
 Methods:
+
         queue_open_()       : Create a named queue
         queue_close_()      : Flush and destroy an existing queue
         queue_put_()        : Put data into a queue
@@ -75,6 +76,7 @@ class QueueExt():
         one of these instances at a time.
 
         Args:
+
             api     : an instance of ExtensionAPI connecting us to the engine
 
             options : a dict of option settings passed down to the extension
@@ -176,26 +178,29 @@ class QueueExt():
     def queue_open_(self, name, **kwargs):
         """Handles the queue_open_() function.
 
-        Creates a new queue and add it's name to the table.
+        Creates a new queue and adds it's name to the table.
 
             Args:
+
                 cname       :   The queue name to use. Must not be in use.
 
                 **kwargs    :   Options to pass down to the Queue.
 
             Returns:
+
                 True if the queue was created.
 
                 False if an error occurred.
 
             Options:
-                    type    :   'fifo' or 'lifo' - queue or stack
+
+                type    :   'fifo' or 'lifo' - queue or stack
 
         """
 
         # check the format of the queue name
         if not checkFileName(name):
-            return retError(self.__api, MODNAME, 'invalid name:'+name)
+            return retError(self.__api, MODNAME, 'invalid name:'+name, False)
 
         try:
             if not self.__lock.acquire(blocking=True, timeout=self.__locktimeout):
@@ -226,12 +231,18 @@ class QueueExt():
         Close an open queue and clear any data currently in it.
 
             Args:
+
                 name    :   The name of the queue to close.
 
             Returns:
+
                 The return value. True for success, False otherwise.
 
         """
+
+        # check the format of the queue name
+        if not checkFileName(name):
+            return retError(self.__api, MODNAME, 'invalid name:'+name, False)
 
         try:
             if not self.__lock.acquire(blocking=True, timeout=self.__locktimeout):
@@ -273,6 +284,7 @@ class QueueExt():
         of 0 will retry until either success or close.
 
             Args:
+
                 name    :   The name of the queue to add to.
 
                 value   :   The data item to add to the queue
@@ -280,16 +292,23 @@ class QueueExt():
                 **kwargs    :   Options to pass down to the Queue.
 
             Options:
+
                     block   :   If True, block until timeout if the queue is full.
 
                     timeout :   Seconds to wait when blocking. 0 means wait forever.
 
             Returns:
+
                 The return value. True for success, False otherwise.
 
         """
+
         if not value:
             return False
+
+        # check the format of the queue name
+        if not checkFileName(name):
+            return retError(self.__api, MODNAME, 'invalid name:'+name, False)
 
         try:
             if name not in self.__queuenames:
@@ -317,19 +336,26 @@ class QueueExt():
         A timeout of 0 will retry until either success or close.
 
             Args:
+
                 name    :   The name of the queue to get from.
 
                 **kwargs    :   Options to pass down to the Queue.
 
             Options:
+
                     block   :   If True, block until timeout if the queue is empty.
 
                     timeout :   Seconds to wait when blocking. 0 means wait forever.
 
             Returns:
+
                 The next value from the queue, or None.
 
         """
+
+        # check the format of the queue name
+        if not checkFileName(name):
+            return retError(self.__api, MODNAME, 'invalid name:'+name, None)
 
         # TODO: add an option to raise() an exception on timeout
 
@@ -348,12 +374,18 @@ class QueueExt():
         Removes all items in a queue.
 
             Args:
+
                 name    :   The name of the queue to get from.
 
             Returns:
+
                 The return value. True for success, False otherwise.
 
         """
+
+        # check the format of the queue name
+        if not checkFileName(name):
+            return retError(self.__api, MODNAME, 'invalid name:'+name, False)
 
         try:
             if name not in self.__queuenames:
@@ -370,16 +402,22 @@ class QueueExt():
         Returns the number of entries in a queue.
 
             Args:
+
                 name    :   The name of the queue to check.
 
             Returns:
+
                 The number of items in the named queue.  Any error returns 0.
 
         """
 
+        # check the format of the queue name
+        if not checkFileName(name):
+            return retError(self.__api, MODNAME, 'invalid name:'+name, 0)
+
         try:
             if name not in self.__queuenames:
-                return retError(self.__api, MODNAME, 'Queue name not found:'+name,  0)
+                return retError(self.__api, MODNAME, 'Queue name not found:'+name, 0)
 
             ret = self.__queues[name].tqueue_len_()
             return ret
@@ -392,12 +430,18 @@ class QueueExt():
         Returns True if the queue is empty.
 
             Args:
+
                 name    :   The name of the queue to check.
 
             Returns:
+
                 True if the named queue is empty, or there was an error.
 
         """
+
+        # check the format of the queue name
+        if not checkFileName(name):
+            return retError(self.__api, MODNAME, 'invalid name:'+name, False)
 
         try:
             if name not in self.__queuenames:
@@ -413,9 +457,11 @@ class QueueExt():
         Returns a list with the names of all open queues.
 
             Args:
+
                 None
 
             Returns:
+
                 A list[] of open queues.  The list may be empty if
                 there are no queues open.
 
