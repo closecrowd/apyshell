@@ -87,15 +87,17 @@ class ExtensionAPI:
 
         """
 
+        ret = True
+
         if len(mdict) < 1:
             return False
         try:
-            # then add them to the engine
-            self.__engine.addcmds(mdict)
+            # add them to the engine
+            ret = self.__engine.addcmds(mdict)
         except:
             debug('*** failed to register cmds')
             return False
-        return True
+        return ret
 
     # remove a module's commands
     def unregisterCmds(self, mdict):
@@ -116,15 +118,17 @@ class ExtensionAPI:
 
         """
 
+        ret = True
+
         if len(mdict) < 1:
             return False
         try:
             # then remove them from the engine
-            self.__engine.delcmds(mdict)
+            ret = self.__engine.delcmds(mdict)
         except:
             debug('*** failed to unregister cmds')
             return False
-        return True
+        return ret
 
     # regcmd
     def regcmd(self, name, func=None):

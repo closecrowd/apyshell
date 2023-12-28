@@ -81,6 +81,7 @@ Modules currently available are:
 
 - math
 - numpy
+- re
 - time
 - json
 - base64
