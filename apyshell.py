@@ -40,15 +40,15 @@ basedir = '/opt/apyshell/scripts'           # script base directory
 extensiondir = '/opt/apyshell/extensions'   # extension base dir
 
 # options passed to various extensions.  Modify to suit your environment.
-extension_opts = {  'allow_redis_cmds':True, # allow raw commands in redisext
-                    'allow_system':True,     # allow system_() call in utilext
-                    'allow_getenv':True,     # allow getenv_() call in utilext
-                    'file_root':'/opt/apyshell/files',  # fileext is rooted here
-                    'read_only':False,                  # fileext can write files
-                    'list_files':True,                  # fileext can return a dir list
-                    'sql_root':'/opt/apyshell/files',   # sqliteext files go here
-                    'sql_ext':'db'                      # sqliteext file extension
-}
+extension_opts = {  'allow_redis_cmds': True,  # allow raw commands in redisext
+                    'allow_system': True,      # allow system_() call in utilext
+                    'allow_getenv': True,      # allow getenv_() call in utilext
+                    'file_root': '/opt/apyshell/files',  # fileext is rooted here
+                    'read_only': False,                  # fileext can write files
+                    'list_files': True,                  # fileext can return a dir list
+                    'sql_root': '/opt/apyshell/files',   # sqliteext files go here
+                    'sql_ext': 'db'                      # sqliteext file extension
+                 }
 
 validpidfile = False
 
@@ -160,9 +160,9 @@ def processOptions(eopts):
         if ':' not in kp:
             continue
         # split the pair
-        (key,val) = kp.split(':')
+        (key, val) = kp.split(':')
         # convert string to boolean
-        if val in ['False','True']:
+        if val in ['False', 'True']:
             val = bool(val)
         # store the value in the dict
         extension_opts[key] = val
@@ -304,7 +304,7 @@ if __name__ == "__main__":
     if eopts:
         processOptions(eopts)
 
-    debugMsg('apyshell', 'basedir=',basedir,'extdir=',extensiondir)
+    debugMsg('apyshell', 'basedir=', basedir, 'extdir=', extensiondir)
 
     # get the script name
     script = sys.argv[1]
@@ -336,5 +336,3 @@ if __name__ == "__main__":
 
     # and exit, sending the code with it
     sys.exit(rv)
-
-

@@ -30,14 +30,12 @@ Methods:
 
 Credits:
     * version: 1.0.0
-    * last update: 2023-Nov-13
+    * last update: 2024-Jan-05
     * License:  MIT
     * Author:  Mark Anacker <closecrowd@pm.me>
-    * Copyright (c) 2023 by Mark Anacker
+    * Copyright (c) 2023,2024 by Mark Anacker
 
 """
-
-modready = True
 
 import queue
 import threading
@@ -51,12 +49,14 @@ from extensionapi import *
 # Globals
 #
 
+modready = True
+
 __key__ = 'queueext'
 __cname__ = 'QueueExt'
 
 MODNAME = "queueext"
-DEBUG=False
-#DEBUG=True
+DEBUG = False
+# DEBUG = True
 
 ##############################################################################
 
@@ -168,11 +168,11 @@ class QueueExt():
 
         return True
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #
 # Script API
 #
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
     # add a new queue
     def queue_open_(self, name, **kwargs):
@@ -481,11 +481,11 @@ class QueueExt():
 
         return ret
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #
 # queue class
 #
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
 class ThreadQueue_():
     """This class implements the actual thread-safe queue.
@@ -519,7 +519,7 @@ class ThreadQueue_():
     # Add an item to the queue
     def tqueue_put_(self, value, **kwargs):
 
-        if self.__closed or value == None:
+        if self.__closed or value is None:
             return False
 
         # put the queue object
@@ -538,7 +538,7 @@ class ThreadQueue_():
                 if self.__closed:
                     return False
                 # loop until we succeed, timeout, or are closed
-                while count <= timeout and self.__closed == False:
+                while count <= timeout and self.__closed is False:
                     try:
                         if self.__closed:
                             break
@@ -581,7 +581,7 @@ class ThreadQueue_():
             # if it's a blocking get
             if block:
                 count = 0
-                while count <= timeout and self.__closed == False:
+                while count <= timeout and self.__closed is False:
                     try:
                         if self.__closed:
                             break
@@ -640,11 +640,11 @@ class ThreadQueue_():
 
 
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #
 # Support functions
 #
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
 # clear all entries from a queue
 def clearq__(q):

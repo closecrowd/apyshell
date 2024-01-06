@@ -24,5 +24,3 @@ from .extensionmgr import *
 from .support import *
 
 __all__ = ['apyshell', 'extensionmgr', 'extensionapi', 'support', 'apyengine']
-
-

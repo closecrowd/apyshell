@@ -48,14 +48,16 @@ Note:
 
 Credits:
     * version: 1.0.0
-    * last update: 2023-Nov-20
+    * last update: 2024-Jan-05
     * License:  MIT
     * Author:  Mark Anacker <closecrowd@pm.me>
-    * Copyright (c) 2023 by Mark Anacker
+    * Copyright (c) 2023,2024 by Mark Anacker
 
 """
 
 import threading
+from support import *
+from extensionapi import *
 
 modready = True
 try:
@@ -64,8 +66,6 @@ except Exception as ex:
     modready = False
     print('import failed:', ex)
 
-from support import *
-from extensionapi import *
 
 ##############################################################################
 
@@ -234,11 +234,11 @@ class RedisExt():
             self.__conns[cname].disconnect_(cname)
         return True
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #
 # Script API
 #
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
     def connect_(self, cname, host='127.0.0.1', port=6379, **kwargs):
         """Handles the redis_connect_() function.
@@ -272,9 +272,9 @@ class RedisExt():
                 return retError(self.__api, MODNAME, 'name already used:'+cname, False)
 
             m = RedisConnection(cname, self.__api)
-            if m != None:
+            if m is not None:
                 cflag = m.connect_(host, port, **kwargs)
-                if cflag == True:
+                if cflag is True:
                     self.__conns[cname] = m
                     unlock__(self.__lock)
                     return True
@@ -343,7 +343,7 @@ class RedisExt():
             if not self.__lock.acquire(blocking=True, timeout=self.__locktimeout):
                 return retError(self.__api, MODNAME, 'Could not list redis conns', None)
 
-            ret =  list(self.__conns.keys())
+            ret = list(self.__conns.keys())
             unlock__(self.__lock)
         except Exception as e:
             unlock__(self.__lock)
@@ -468,11 +468,11 @@ class RedisExt():
 
 
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #
 # connection class
 #
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
 class RedisConnection():
     """
@@ -494,7 +494,7 @@ class RedisConnection():
     def connect_(self, host='127.0.0.1', port=6379, **kwargs):
         """Connect to the Redis server."""
 
-        if self.__client != None:
+        if self.__client is not None:
             return False
 
         if not host:
@@ -526,14 +526,14 @@ class RedisConnection():
     def disconnect_(self):
         """Disconnect from the Redis server."""
 
-        if self.__client != None:
+        if self.__client is not None:
             self.__client = None
 
     # redis command processor
     def cmds_(self, *args):
         """Send a command directly to the server."""
 
-        if self.__client == None:
+        if self.__client is None:
             return None
 
         return self.__client.execute_command(*args)
@@ -542,15 +542,14 @@ class RedisConnection():
     def hmset_(self, *args):
         """Load a whole dict into a redis hashmap."""
 
-        if self.__client == None:
+        if self.__client is None:
             return None
 
         return self.__client.hmset(*args)
 
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #
 # Support functions
 #
-#----------------------------------------------------------------------
-
+# ----------------------------------------------------------------------

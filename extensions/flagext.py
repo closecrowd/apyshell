@@ -33,14 +33,12 @@ Methods:
 
 Credits:
     * version: 1.0.0
-    * last update: 2023-Dec-12
+    * last update: 2024-Jan-05
     * License:  MIT
     * Author:  Mark Anacker <closecrowd@pm.me>
-    * Copyright (c) 2023 by Mark Anacker
+    * Copyright (c) 2023,2024 by Mark Anacker
 
 """
-
-modready = True
 
 import threading
 import time
@@ -54,10 +52,12 @@ from extensionapi import *
 # Globals
 #
 
+modready = True
+
 __key__ = 'flagext'
 __cname__ = 'FlagExt'
 
-MODNAME="flagext"
+MODNAME = "flagext"
 
 ##############################################################################
 
@@ -175,11 +175,11 @@ class FlagExt():
             unlock__(self.__lock)
         return True
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #
 # Script API
 #
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
     # add a new, lowered flag
     def flag_add_(self, name):
@@ -469,9 +469,8 @@ class FlagExt():
             pass
         return None
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #
 # Support functions
 #
-#----------------------------------------------------------------------
-
+# ----------------------------------------------------------------------

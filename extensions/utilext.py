@@ -21,21 +21,19 @@ Methods:
 
 Credits:
     * version: 1.0.0
-    * last update: 2023-Nov-17
+    * last update: 2024-Jan-05
     * License:  MIT
     * Author:  Mark Anacker <closecrowd@pm.me>
-    * Copyright (c) 2023 by Mark Anacker
+    * Copyright (c) 2023,2024 by Mark Anacker
 
 """
-
-modready = True
 
 import os
 import sys
 import select
 
-from support import *
-from extensionapi import *
+# from support import *
+# from extensionapi import *
 
 ##############################################################################
 
@@ -43,10 +41,12 @@ from extensionapi import *
 # Globals
 #
 
+modready = True
+
 __key__ = 'utilext'
 __cname__ = 'UtilExt'
 
-MODNAME="utilext"
+MODNAME = "utilext"
 
 ##############################################################################
 
@@ -147,11 +147,11 @@ class UtilExt():
         """
         return True
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #
 # Script API
 #
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
     # timed input with defaults
     def input_(self, prompt=None, default=None, **kwargs):
@@ -201,10 +201,10 @@ class UtilExt():
             sys.stdout.write(prompt)
             sys.stdout.flush()
 
-        rlist, _, _ = select.select([sys.stdin], [],[], timeout)
+        rlist, _, _ = select.select([sys.stdin], [], [], timeout)
         if rlist:
             # got data
-            ret = sys.stdin.readline().rstrip('\n') # expect stdin to be line-buffered
+            ret = sys.stdin.readline().rstrip('\n')  # expect stdin to be line-buffered
             # if there's a timeout default
             if todef:
                 # and the input happens to match it
@@ -270,8 +270,8 @@ class UtilExt():
 
         return os.environ.get(name, None)
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #
 # Support functions
 #
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------

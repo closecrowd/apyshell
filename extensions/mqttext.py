@@ -34,12 +34,19 @@ Note:
 
 Credits:
     * version: 1.0.0
-    * last update: 2023-Nov-13
+    * last update: 2024-Jan-05
     * License:  MIT
     * Author:  Mark Anacker <closecrowd@pm.me>
-    * Copyright (c) 2023 by Mark Anacker
+    * Copyright (c) 2023,2024 by Mark Anacker
 
 """
+
+import os
+from queue import Queue
+from types import *
+
+from support import *
+from extensionapi import *
 
 modready = True
 try:
@@ -47,14 +54,6 @@ try:
 except Exception as ex:
     modready = False
     print('import failed:', ex)
-
-import os
-from queue import Queue
-from types import *
-
-
-from support import *
-from extensionapi import *
 
 ##############################################################################
 
@@ -64,17 +63,17 @@ from extensionapi import *
 
 __key__ = 'mqttext'
 __cname__ = 'MqttExt'
-MODNAME="mqttext"
+MODNAME = "mqttext"
 
-#defaultName = 'mqttconn'
+# defaultName = 'mqttconn'
 
 ##############################################################################
 
-DEBUG=False
-#DEBUG=True
+DEBUG = False
+# DEBUG=True
 def debug(*args):
     if DEBUG:
-        print(MODNAME,str(args))
+        print(MODNAME, str(args))
 
 # ----------------------------------------------------------------------------
 #
@@ -125,7 +124,7 @@ class MqttExt():
 
         self.__cmddict = {}
 
-        self.__conns = {} # mqtt connection objects
+        self.__conns = {}   # mqtt connection objects
 
 
     def register(self):
@@ -204,11 +203,11 @@ class MqttExt():
             self.__conns[cname].disconnect_(cname)
         return True
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #
 # Script API
 #
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
     # connect to a broker
     def connect_(self, cname, **kwargs):
@@ -228,7 +227,7 @@ class MqttExt():
 
         """
 
-        debugMsg(MODNAME, 'mqtt:connect:',kwargs, type(kwargs))
+        debugMsg(MODNAME, 'mqtt:connect:', kwargs, type(kwargs))
 
         # check the format of the connection name
         if not checkFileName(cname):
@@ -239,7 +238,7 @@ class MqttExt():
             return retError(self.__api, MODNAME, 'name already used:'+cname, False)
 
         m = MqttConnection(cname, self.__api)
-        if m != None:
+        if m is not None:
             self.__conns[cname] = m
         return m.connect_(**kwargs)
 
@@ -374,11 +373,11 @@ class MqttExt():
         return list(self.__conns.keys())
 
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #
 # connection class
 #
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
 class MqttConnection():
     """
@@ -418,11 +417,11 @@ class MqttConnection():
         self.__connected = False
         self.__running = False
         self.__maxqueue = 100
-        self.__inqueue = Queue(self.__maxqueue) # msg recv queue
+        self.__inqueue = Queue(self.__maxqueue)     # msg recv queue
         self.__subqueue = Queue(20)   # topic sub queue
 
-        self.__topics = set()     # current topics
-        self.__topichandlers = {} # per-topic script handlers
+        self.__topics = set()       # current topics
+        self.__topichandlers = {}   # per-topic script handlers
         self.__wildcardhandlers = {}
         self.__client = None
 
@@ -469,7 +468,7 @@ class MqttConnection():
     def disconnect_(self):
         debugMsg(MODNAME, "mqtt disconnect")
         self.__autoreconnect = False
-        if self.__client != None:
+        if self.__client is not None:
             self.__client.loop_stop()
             self.__running = False
             self.__client.disconnect()
@@ -478,10 +477,10 @@ class MqttConnection():
 
 
     def subtopic_(self, topic, handler=None, qos=0):
-        if self.__client == None:
+        if self.__client is None:
             return False
 
-        if qos not in [0,1,2]:
+        if qos not in [0, 1, 2]:
             return False
 
         if not topic:
@@ -490,7 +489,7 @@ class MqttConnection():
         if topic not in self.__topics:
             if not self.__connected:
                 # defer the sub until later
-                self.__subqueue.put((topic,handler,qos), False, 1)
+                self.__subqueue.put((topic, handler, qos), False, 1)
                 debugMsg(MODNAME, "mqtt: subscription queued:", topic)
                 return True
 
@@ -498,7 +497,7 @@ class MqttConnection():
             self.__topics.add(topic)
             self.__client.subscribe(topic, qos)
             # add a per-topic callback handler
-            if handler != None:
+            if handler is not None:
                 tsplit = topic.split('/')
                 if '+' in tsplit or '#' in tsplit:
                     self.__wildcardhandlers[topic] = handler
@@ -510,7 +509,7 @@ class MqttConnection():
         return False
 
     def unsubtopic_(self, topic):
-        if self.__client == None:
+        if self.__client is None:
             return False
         if not self.__connected:
             return False
@@ -554,7 +553,7 @@ class MqttConnection():
     # send a message to a topic (or topics)
     def sendmsg_(self, dest, data, qos=0, retain=False):
 
-        if self.__client == None:
+        if self.__client is None:
             return False
         if not self.__connected:
             return False
@@ -564,58 +563,59 @@ class MqttConnection():
         if not data:
             return False
 
-        if qos not in [0,1,2]:
+        if qos not in [0, 1, 2]:
             return False
 
         rv = True
+        tl = list()
+
         # dest topics may be a list
         if isinstance(dest, list):
-            l = dest
+            tl = dest
         else:
             # or a string representation of a list
             if dest[0] == '[':
-                l = dest[1:-1].split(',')
+                tl = dest[1:-1].split(',')
             else:
                 # or just a single string - make it a list
-                l = list()
-                l.append(dest)
+                tl.append(dest)
 
-        if len(l) < 1:
+        if len(tl) < 1:
             return False
 
         # walk the list and send to all the topics
-        for topic in l:
+        for topic in tl:
             self.__client.publish(topic, payload=data, qos=qos, retain=retain)
 #            rv = ret.is_published
         return rv
 
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #
 # Support functions
 #
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
 
     def connectclient(self):
-        debugMsg(MODNAME, "mqtt connect",self.__broker, self.__bport, self.__clientid, self.__name)
+        debugMsg(MODNAME, "mqtt connect", self.__broker, self.__bport, self.__clientid, self.__name)
 
-        if self.__client == None:
+        if self.__client is None:
             self.__connected = False
             self.__client = mqtt.Client(self.__clientid, clean_session=True, userdata=self.__name)
-            self.__client.on_connect=self.on_connect
-            self.__client.on_disconnect=self.on_disconnect
-            self.__client.on_message=self.on_message
+            self.__client.on_connect = self.on_connect
+            self.__client.on_disconnect = self.on_disconnect
+            self.__client.on_message = self.on_message
             self.__client.max_queued_messages_set(0)
             self.__client.max_inflight_messages_set(40)
 
             # set user/password if given
-            if self.__username != None:
+            if self.__username is not None:
                 self.__client.username_pw_set(self.__username, self.__password)
 
             # set up TLS
-            if self.__tlscertfile !=None:
-                if self.__tlsvers == None:
+            if self.__tlscertfile is not None:
+                if self.__tlsvers is None:
                     self.__client.tls_set(self.__tlscertfile)
                 else:
                     self.__client.tls_set(self.__tlscertfile, self.__tlsvers)
@@ -631,7 +631,7 @@ class MqttConnection():
 
     # quickly resub to all current topics
     def resuball(self):
-        if self.__client == None:
+        if self.__client is not None:
             return False
 
         for topic in self.__topics:
@@ -650,7 +650,7 @@ class MqttConnection():
             self.__connected = True
             # if we have deferred subscriptions queued up
             while self.__subqueue.qsize() > 0:
-                topic,handler,qos = self.__subqueue.get(False)
+                topic, handler, qos = self.__subqueue.get(False)
                 self.subtopic_(topic, handler, qos)
                 debugMsg(MODNAME, "mqtt: subscribed to:", topic, handler, qos)
         else:
@@ -666,7 +666,7 @@ class MqttConnection():
         intup = (str(message.payload.decode("utf-8")), message.topic, message.qos, message.retain, self.__name )
         try:
             # if they gave us a handler
-            if self.__handler != None:
+            if self.__handler is not None:
                 self.__api.handleEvents(self.__handler, intup )
             else:
                 # otherwise, we're polled
@@ -712,14 +712,14 @@ class MqttConnection():
             errorMsg(MODNAME, 'on_wildcard_message:exc', str(ex))
             pass    # skipped on a full queue
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #
 # Support functions
 #
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
 def topicmatch(subsc, topic):
-    subl,topic=subsc.split('/'),topic.split('/')
+    subl, topic = subsc.split('/'), topic.split('/')
     for i in range(len(subl)):
         e = subl[i]
         if e == '#':
@@ -730,5 +730,3 @@ def topicmatch(subsc, topic):
             return False
 
     return True
-
-

@@ -22,14 +22,12 @@ Methods:
 
 Credits:
     * version: 1.0.0
-    * last update: 2023-Nov-13
+    * last update: 2024-Jan-05
     * License:  MIT
     * Author:  Mark Anacker <closecrowd@pm.me>
-    * Copyright (c) 2023 by Mark Anacker
+    * Copyright (c) 2023,2024 by Mark Anacker
 
 """
-
-modready = True
 
 import os
 
@@ -41,6 +39,8 @@ from extensionapi import *
 #
 # Globals
 #
+
+modready = True
 
 __key__ = 'fileext'
 __cname__ = 'FileExt'
@@ -65,11 +65,13 @@ class FileExt():
         one of these instances at a time.
 
         Args:
+
             api     : an instance of ExtensionAPI connecting us to the engine
 
             options : a dict of option settings passed down to the extension
 
         Options:
+
                     'file_root' - a path prepended to all
                                 filenames, restricting access to files
                                 below this point.
@@ -112,9 +114,11 @@ class FileExt():
                 * listFiles_()    :   return a list of files in the given path
 
         Args:
+
             None
 
         Returns
+
             True        :   Commands are installed and the extension is ready to use.
 
             False       :   Commands are NOT installed, and the extension is inactive.
@@ -150,11 +154,11 @@ class FileExt():
         ''' Perform a graceful shutdown '''
         return True
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #
 # Script API
 #
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
 #
 # Simple text file functions
@@ -166,6 +170,7 @@ class FileExt():
         Read a text file all-at-once, or line by line.
 
             Args:
+
                 filepath    :   filename (and optional path) to read from.
                                 Absolute (/) and parent (..) paths are not
                                 allowed.  Path will be under "file_root" if
@@ -182,6 +187,7 @@ class FileExt():
                                 omitted or 0, read until the end of the file.  Optional.
 
             Returns:
+
                 None            :   If there was an error opening the file
 
                 data            :   str     The lines from the file if no handler
@@ -215,7 +221,7 @@ class FileExt():
                         # call the script handler to process the line
                         rv = self.__api.handleEvents(handler, '"'+line.strip()+'"')
                         cnt += 1
-                        if maxlines > 0 and cnt >= maxlines or rv == False:
+                        if maxlines > 0 and cnt >= maxlines or rv is False:
                             break
                 return cnt
         except Exception as ex:
@@ -229,6 +235,7 @@ class FileExt():
         Write to a text file all-at-once, or line by line.
 
             Args:
+
                 filepath    :   filename (and optional path) to read from.
                                 Absolute (/) and parent (..) paths are not
                                 allowed.  Path will be under "file_root" if
@@ -248,6 +255,7 @@ class FileExt():
                                 Optional.
 
             Returns:
+
                 None    :   If there was an error opening the file
 
                 count   :   int     The number of lines sent to the
@@ -273,6 +281,7 @@ class FileExt():
         Append lines to a text file all-at-once, or line by line.
 
             Args:
+
                 filepath    :   filename (and optional path) to read from.
                                 Absolute (/) and parent (..) paths are not
                                 allowed.  Path will be under "file_root" if
@@ -292,6 +301,7 @@ class FileExt():
                                 Optional.
 
             Returns:
+
                 None    :   If there was an error writing to the file
 
                 count   :   int     The number of lines sent to the
@@ -311,7 +321,20 @@ class FileExt():
         return lineWriter(self.__api,  fp, data, handler=handler, maxlines=maxlines, mode='a')
 
     def listFiles_(self, filepath=''):
-        """return a list of files """
+        """Return a list of files on a path.
+
+        Returns a list of files in the specified directory, or the configured
+        basepath if not specified.  The path is always relative to basepath.
+
+            Args:
+
+                filepath    :   The directory to list
+
+            Returns:
+
+                A list[] with the contents of the directory.
+
+        """
 
         fp = sanitizePath(filepath)
 
@@ -329,11 +352,11 @@ class FileExt():
 
 
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #
 # Support functions
 #
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
 # write data depending on it's type
 def typeWrite(f,  data):
@@ -361,6 +384,7 @@ def lineWriter(api, fp, data, handler=None, maxlines=0,  mode='w'):
     """Write lines to a file in either overwite or append mode
 
             Args:
+
                 fp          : Filepath to write to
                 data        : Data to write if no handler
                 handler
@@ -391,4 +415,3 @@ def lineWriter(api, fp, data, handler=None, maxlines=0,  mode='w'):
     except Exception as ex:
         return retError(api, MODNAME, 'Error writing file "'+filepath+'":'+str(ex), None)
     return None
-

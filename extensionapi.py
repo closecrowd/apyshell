@@ -17,12 +17,12 @@ from support import *
 
 ##############################################################################
 
-MODNAME="extensionapi:"
-DEBUG=False
-#DEBUG=True
+MODNAME = "extensionapi:"
+DEBUG = False
+# DEBUG=True
 def debug(*args):
     if DEBUG:
-        print(MODNAME,str(args))
+        print(MODNAME, str(args))
 
 # ----------------------------------------------------------------------------
 #
@@ -178,5 +178,3 @@ class ExtensionAPI:
     # handle error msgs from the extensions
     def logError(self, modname='', *args):
         errorMsg(modname, *args)
-
-

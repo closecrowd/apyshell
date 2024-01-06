@@ -27,11 +27,11 @@ import string
 VALIDCHARS = string.ascii_letters+string.digits+'_-'
 
 debug = False
-#debug = True
+# debug = True
 
 ##############################################################################
 
-#print('support')
+# print('support')
 
 def enableDebug(arg):
     global debug
@@ -143,7 +143,7 @@ def retError(api, module, msg, ret=False):
 
     """
 
-    if api != None:
+    if api is not None:
         api.logError(module, msg)
     else:
         print(module, msg)
@@ -258,7 +258,7 @@ def swapparam(table, oldkey, newkey, value=None):
     # already present
     if oldkey in table:
         # if we don't have a new value
-        if value == None:
+        if value is None:
             # just swap keys
             table[newkey] = table[oldkey]
         else:
@@ -285,4 +285,3 @@ def get_queue(q, defvalue=None, timeout=0):
         return ret
     except:
         return defvalue
-

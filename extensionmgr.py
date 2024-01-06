@@ -41,7 +41,7 @@ pverf = float(str(pvers)+'.'+str(pminor))
 
 ##############################################################################
 
-MODNAME="extensionmgr:"
+MODNAME = "extensionmgr:"
 
 # quote the quotes (and newlines)
 def quoteSpecial(orig):
@@ -311,7 +311,7 @@ class ExtensionMgr:
 
         # grab the path from the available list
         (path, mpath) = self.__availExtensions[ename]
-        debugMsg(MODNAME, "Loading extension ",ename," from ", path)
+        debugMsg(MODNAME, "Loading extension ", ename, " from ", path)
 
         try:
             # new python...
@@ -327,7 +327,7 @@ class ExtensionMgr:
                 try:
                     newmod = __import__(ename)
                 finally:
-                    sys.path[:] = oldpath # restore the previous path
+                    sys.path[:] = oldpath   # restore the previous path
 
             # extension signature check
             try:
@@ -353,9 +353,9 @@ class ExtensionMgr:
             # try to register the extension's functions in the
             # active list
             if m.register():
-                self.__activeExtensions[ename] = {'name':ename, 'path':path, 'class':c, 'obj':m}
+                self.__activeExtensions[ename] = {'name': ename, 'path': path, 'class': c, 'obj': m}
             else:
-                errorMsg(MODNAME, 'Extension',ename,'failed to load')
+                errorMsg(MODNAME, 'Extension', ename, 'failed to load')
                 return False
 
             self.__exobjs[ename] = m
@@ -452,7 +452,7 @@ class ExtensionMgr:
             return None
 
         # create the command string
-        if data != None:
+        if data is not None:
             cmd = name+"("+str(data)+")"
         else:
             cmd = name+"()"
@@ -473,6 +473,7 @@ class ExtensionMgr:
 
     # build the list of (path, extension)
     # and save the internal flag
+
     def scanForExtensions(self, dir):
         """Scan the extension dirs for modules.
 
@@ -496,7 +497,7 @@ class ExtensionMgr:
         # for each path in the list
         for pl in self.spath:
             # get the entries
-            dl = [(pl,x.split('.')[0]) for x in os.listdir(pl) if x.endswith(sext)]
+            dl = [(pl, x.split('.')[0]) for x in os.listdir(pl) if x.endswith(sext)]
             if len(dl) > 0:
                 # add to the extension directory list
                 # for each filename
@@ -514,7 +515,3 @@ class ExtensionMgr:
         debugMsg(MODNAME, "scan:", self.__availExtensions)
 
         return list(self.__availExtensions.keys())
-
-
-
-

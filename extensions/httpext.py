@@ -21,12 +21,16 @@ Methods:
 
 Credits:
     * version: 1.0.0
-    * last update: 2023-Dec-12
+    * last update: 2024-Jan-05
     * License:  MIT
     * Author:  Mark Anacker <closecrowd@pm.me>
-    * Copyright (c) 2023 by Mark Anacker
+    * Copyright (c) 2023,2024 by Mark Anacker
 
 """
+
+from ctypes import *
+from support import *
+from extensionapi import *
 
 modready = True
 modelist = []   # modes available (1==requests, 2==http.client)
@@ -40,7 +44,7 @@ try:
     hasrequests = True
     modelist.append(1)
 except Exception as ex:
-    print('import failed:', ex,'mode 1 unavailable')
+    print('import failed:', ex, 'mode 1 unavailable')
     hasrequests = False
 
 # now try http.client
@@ -50,11 +54,11 @@ try:
     hasclient = True
     modelist.append(2)
 except Exception as ex:
-    print('import failed:', ex,'mode 2 unavailable')
+    print('import failed:', ex, 'mode 2 unavailable')
     hasclient = False
 
 # we have neither, so nothing will be installed
-if hasrequests == False and hasclient == False:
+if hasrequests is False and hasclient is False:
     print('no network support for http')
     modready = False
 else:
@@ -65,11 +69,6 @@ else:
         print('import failed:', ex)
         modready = False
 
-from ctypes import *
-
-
-from support import *
-from extensionapi import *
 
 ##############################################################################
 
@@ -80,32 +79,32 @@ from extensionapi import *
 __key__ = 'httpext'
 __cname__ = 'HttpExt'
 
-MODNAME="httpext"
-DEBUG=False
-#DEBUG=True
+MODNAME = "httpext"
+DEBUG = False
+# DEBUG=True
 
-schemes = {'http', 'https'} # we only support these schemes
+schemes = {'http', 'https'}     # we only support these schemes
 
 # the default header to send if none was passed in
 DEFHEADER = {"Content-type": "text/plain; charset=UTF-8",
              "Accept": "text/plain", "Connection": "close" }
 
 # error return status codes and messages
-ERRORS = {  999 : 'Client mode unavailable: ',
-            998 : 'http_get_() invalid scheme: ',
-            997 : 'no data',
-            996 : 'http_get_() exception: ',
-            995 : 'http_put_() invalid scheme: ',
-            994 : 'http_put_() exception: ',
-            993 : 'http_request_() exception: ',
-            992 : 'Client request exception: ',
+ERRORS = {  999: 'Client mode unavailable: ',
+            998: 'http_get_() invalid scheme: ',
+            997: 'no data',
+            996: 'http_get_() exception: ',
+            995: 'http_put_() invalid scheme: ',
+            994: 'http_put_() exception: ',
+            993: 'http_request_() exception: ',
+            992: 'Client request exception: ',
          }
 
 ##############################################################################
 
 def debug(*args):
     if DEBUG:
-        print(MODNAME,str(args))
+        print(MODNAME, str(args))
 
 # ----------------------------------------------------------------------------
 #
@@ -204,11 +203,11 @@ class HttpExt():
         ''' Perform a graceful shutdown '''
         return True
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #
 # Script API
 #
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
     # return the list of available client modes, and the current mode
     def http_clientModes_(self):
@@ -282,7 +281,7 @@ class HttpExt():
         """
 
         # add a default header if onw wasn't specified
-        if 'headers' not in  kwargs:
+        if 'headers' not in kwargs:
             kwargs['headers'] = DEFHEADER
 
         # check for simple output mode
@@ -321,7 +320,7 @@ class HttpExt():
                 (sc, emsg, r) = _httpclientreq('GET', url, **kwargs)
                 if emsg:
                     emsg = emsg.decode('utf-8')
-            if emsg != None:
+            if emsg is not None:
                 if simple:
                     # return just the message
                     return(emsg)
@@ -383,8 +382,9 @@ class HttpExt():
         """
 
         r = None
+        ex = ''
 
-        if 'headers' not in  kwargs:
+        if 'headers' not in kwargs:
             kwargs['headers'] = DEFHEADER
 
         # caller wants to select the client mode
@@ -457,11 +457,11 @@ class HttpExt():
         # 'http_request_() exception:'
         return(993, ERRORS[993]+str(ex), None)
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #
 # Support functions
 #
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
 # mode 2 - http.client requester
 def _httpclientreq(method, url, **kwargs):
@@ -512,7 +512,7 @@ def _httpclientreq(method, url, **kwargs):
 
 # Convert http.client.HTTPResponse to dict
 def _httpresptodict(r):
-    if r == None:
+    if r is None:
         return {}
     d = vars(r)
     if 'msg' in d.keys():
@@ -520,4 +520,3 @@ def _httpresptodict(r):
     if 'headers' in d.keys():
         d['headers'] = str(r.headers)
     return d
-

@@ -35,13 +35,17 @@ Note:
 
 Credits:
     * version: 1.0
-    * last update: 2023-Nov-20
+    * last update: 2024-Jan-05
     * License:  MIT
     * Author:  Mark Anacker <closecrowd@pm.me>
-    * Copyright (c) 2023 by Mark Anacker
+    * Copyright (c) 2023,2024 by Mark Anacker
 
 """
 
+import threading
+
+from support import *
+from extensionapi import *
 
 modready = True
 try:
@@ -50,10 +54,6 @@ except Exception as ex:
     modready = False
     print('import failed:', ex)
 
-import threading
-
-from support import *
-from extensionapi import *
 
 ##############################################################################
 
@@ -218,11 +218,11 @@ class SqLiteExt():
             self.__conns[cname].sql_close_(cname)
         return True
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #
 # Script API
 #
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
     # open the db
     def sql_open_(self, cname, dbname, **kwargs):
@@ -290,10 +290,10 @@ class SqLiteExt():
 
             # create a connection object
             m = SqlLiteConnection(cname, dbname, self.__api)
-            if m != None:
+            if m is not None:
                 # and try to open it
                 cflag = m.sql_open_(dbpath, **kwargs)
-                if cflag == True:
+                if cflag is True:
                     # save the connection name
                     self.__conns[cname] = m
                     # and the database file name
@@ -506,11 +506,11 @@ class SqLiteExt():
         return ret
 
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #
 # connection class
 #
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
 class SqlLiteConnection():
     """
@@ -587,7 +587,7 @@ class SqlLiteConnection():
         """
             Close the connection to database and clean-up.
         """
-        if self.__client == None:
+        if self.__client is None:
             return False
 
         try:
@@ -625,7 +625,7 @@ class SqlLiteConnection():
                                         the execute_() call.  Default=False.
 
         """
-        if self.__client == None:
+        if self.__client is None:
             return None
 
         # allow us to override the auto flag here
@@ -633,7 +633,7 @@ class SqlLiteConnection():
 
         try:
             rv = self.__lock.acquire(blocking=True, timeout=20)
-            if rv == False:
+            if rv is False:
                 return retError(self.__api, MODNAME, 'Could not execute "'+sql+'"', None)
             # execute the statement with optional args
             ret = self.__client.conn_().execute(sql, args)
@@ -662,11 +662,11 @@ class SqlLiteConnection():
 
         """
 
-        if self.__client == None:
+        if self.__client is None:
             return False
         try:
             rv = self.__lock.acquire(blocking=True, timeout=20)
-            if rv == False:
+            if rv is False:
                 return retError(self.__api, MODNAME, 'Could not commit to "'+self.__dbname+'"', None)
             self.__client.conn_().commit()
             self.__lock.release()
@@ -693,11 +693,11 @@ class SqlLiteConnection():
 
         """
 
-        if self.__client == None:
+        if self.__client is None:
             return False
         try:
             rv = self.__lock.acquire(blocking=True, timeout=20)
-            if rv == False:
+            if rv is False:
                 return retError(self.__api, MODNAME, 'Could not roll back "'+self.__dbname+'"', None)
             self.__client.conn_().rollback()
             self.__lock.release()
@@ -723,7 +723,7 @@ class SqlLiteConnection():
 
         """
 
-        if self.__client == None:
+        if self.__client is None:
             return -1
 
         try:
@@ -760,7 +760,7 @@ class SqlLiteConnection():
 
         try:
             rv = self.__lock.acquire(blocking=True, timeout=20)
-            if rv == False:
+            if rv is False:
                 return retError(self.__api, MODNAME, 'Could not fetch cursor "'+self.__dbname+'"', None)
 
             if count < 0:
@@ -783,11 +783,11 @@ class SqlLiteConnection():
         return self.__dbname
 
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #
 # Support functions
 #
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
 class _SqlDatabase:
     """Sqllite3 database proxy objext.
@@ -812,9 +812,8 @@ class _SqlDatabase:
     def auto_(self):
         return self.__autocommit
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #
 # Support functions
 #
-#----------------------------------------------------------------------
-
+# ----------------------------------------------------------------------
