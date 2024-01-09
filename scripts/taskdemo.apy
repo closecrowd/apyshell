@@ -1,0 +1,107 @@
+#
+# taskdemo.apy
+#
+# This apyshell script demos the multi-threading tasks Extension,
+# as well as multiple entities using the same queue object.  
+#
+# It launches two tasks (functions) in separate threads, both
+# waiting on data from a shared queue.  The main thread then starts
+# feeding data to the queue, while the task threads fight over the
+# incoming messages.  If the delay times are the same, they will
+# effectively round-robin pulling messages from the queue.
+# 
+# 
+# Mark Anacker  closecrowd@pm.me
+# -------------------------------------------------------------------
+
+install_('time')
+
+#
+# Load the queueext.py and tasksext.py extensions - if this invocation of
+# apyshell.py has them available in the designated extensions directory.  
+# By default, they would be there.
+#
+
+e = loadExtension_('queueext')
+if not e:
+    print('Failed to load the queue extension!')
+    exit_(1)
+
+e = loadExtension_('tasksext')
+if not e:
+    print('Failed to load the tasks extension!')
+    exit_(1)
+
+# a global score counter
+count = 0
+
+# task 1
+# poll the queue. If we get a message, add to count and print it
+def task1(dat1):
+    qdat = queue_get_('myqueue', block=True, timeout=5) 
+    if qdat:
+        count += 1
+        print('task1:', dat1, count, qdat)
+
+# task 2
+# same as the previous task
+def task2(dat2):
+    qdat = queue_get_('myqueue', block=True, timeout=5) 
+    if qdat:
+        count += 1
+        print('task2:', dat2, count, qdat)
+
+# setup done - here we go....
+
+# create the queue
+q = queue_open_('myqueue')
+
+print('Creating tasks...')
+
+# args: (id, handler, data, delay)
+tasks_open_('t1', 'task1', 'tdat1', 0.5)
+tasks_open_('t2', 'task2', 'tdat2', 0.5)
+
+# print the list of tasks
+print('Tasks:',tasks_list_())
+
+print('Starting tasks...')
+
+# start your engines....
+tasks_start_('t1')
+tasks_start_('t2')
+
+print('Generating data...')
+
+# loop and create some messages
+while count < 20:
+    d = "message:"+str(count)
+    # add the message to the queue
+    r = queue_put_('myqueue', d, timeout=4)
+
+    # just for fun, let's pause t2 in the middle
+    if count == 4:
+        tasks_pause_('t2', True)
+    # okay, t1 has had enough fun. resume t2
+    if count == 8:
+        tasks_pause_('t2', False)
+
+    # delay a bit for clarity
+    sleep_(0.5)
+
+
+print('Data finished. Cleaning up...')
+
+# clean up the tasks
+tasks_close_('t1')
+tasks_close_('t2')
+
+sleep_(1)
+
+# and clean up the queue
+queue_close_('myqueue')
+
+print('Done.')
+
+
+

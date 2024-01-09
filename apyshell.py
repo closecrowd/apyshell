@@ -10,10 +10,10 @@ It can be run either stand-alone, or itself embedded into an application.
 
 Credits:
     * version: 1.0.0
-    * last update: 2023-Nov-21
+    * last update: 2024-Jan-05
     * License:  MIT
     * Author:  Mark Anacker <closecrowd@pm.me>
-    * Copyright (c) 2023 by Mark Anacker
+    * Copyright (c) 2023,2024 by Mark Anacker
 
 """
 

@@ -29,8 +29,8 @@ Methods:
         queue_list_()       : Return a list[] of the current queue names
 
 Credits:
-    * version: 1.0.0
-    * last update: 2024-Jan-05
+    * version: 1.0.1
+    * last update: 2024-Jan-08
     * License:  MIT
     * Author:  Mark Anacker <closecrowd@pm.me>
     * Copyright (c) 2023,2024 by Mark Anacker
@@ -254,10 +254,11 @@ class QueueExt():
 
             # get the queue object
             q = self.__queues[name]
-            # empty the queue
-            q.tqueue_clear_()
-            # and close it
-            q.tqueue_close_()
+            if q:
+                # empty the queue
+                q.tqueue_clear_()
+                # and close it
+                q.tqueue_close_()
             # delete the object
             del self.__queues[name]
             # and remove the name
@@ -514,7 +515,7 @@ class ThreadQueue_():
         # flag it as closed
         self.__closed = True
         # wake up any sleeping gets()
-        q.put(None, block=False)
+        self.__queue.put(None, block=False)
 
     # Add an item to the queue
     def tqueue_put_(self, value, **kwargs):

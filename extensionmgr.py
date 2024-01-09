@@ -5,10 +5,10 @@ This module supports the extension handling commands for apyshell.
 
 Credits:
     * version: 1.0.0
-    * last update: 2023-Nov-20
+    * last update: 2024-Jan-05
     * License:  MIT
     * Author:  Mark Anacker <closecrowd@pm.me>
-    * Copyright (c) 2023 by Mark Anacker
+    * Copyright (c) 2023,2024 by Mark Anacker
 
 """
 
