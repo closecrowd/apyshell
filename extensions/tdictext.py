@@ -129,9 +129,11 @@ class TDictExt():
                 * tdict_list_()       : return a list[] of tdicts
 
         Args:
+
             None
 
-        Returns
+        Returns:
+
             True        :   Commands are installed and the extension is ready to use.
 
             False       :   Commands are NOT installed, and the extension is inactive.
@@ -212,9 +214,11 @@ class TDictExt():
         Creates a new tdict object attached to the given name.
 
             Args:
+
                 cname   :   The name of the dict to create.
 
             Returns:
+
                 True for success, False otherwise.
 
         """
@@ -242,9 +246,11 @@ class TDictExt():
         Clears out the data from an existing tdict, then removes it.
 
             Args:
+
                 cname   :   The name of the dict to remove.
 
             Returns:
+
                 True for success, False otherwise.
 
         """
@@ -277,6 +283,7 @@ class TDictExt():
         dict object associated with "cname", and returns the result.
 
             Args:
+
                 cmd     :   The operation to perform
 
                 cname   :   The name of the dict to use.
@@ -286,8 +293,8 @@ class TDictExt():
                 value   :   A value argument (if needed)
 
             Returns:
-                Depends on the operation.  See the functions below
-                for the specific returns.
+
+                Depends on the operation.  See the functions below for the specific returns.
 
         """
 
@@ -314,6 +321,7 @@ class TDictExt():
         an existing value with the new one.
 
             Args:
+
                 cname   :   The name of the dict to use.
 
                 key     :   A key string.
@@ -321,6 +329,7 @@ class TDictExt():
                 value   :   A value argument to add or replace.
 
             Returns:
+
                 True for success, False otherwise.
 
         """
@@ -334,11 +343,13 @@ class TDictExt():
         the named tdict.
 
             Args:
+
                 cname   :   The name of the dict to use.
 
                 value   :   The dict object to merge in.
 
             Returns:
+
                 True for success, False otherwise.
 
         """
@@ -352,6 +363,7 @@ class TDictExt():
         returns a default value if the key isn't found.
 
             Args:
+
                 cname   :   The name of the dict to use.
 
                 key     :   A key string to look for.
@@ -359,6 +371,7 @@ class TDictExt():
                 value   :   A default to return if key isn't in the dict.
 
             Returns:
+
                 The retrieved item, or the supplied value.
 
         """
@@ -373,6 +386,7 @@ class TDictExt():
         the item from the dict if the key was found.
 
             Args:
+
                 cname   :   The name of the dict to use.
 
                 key     :   A key string to look for.
@@ -380,6 +394,7 @@ class TDictExt():
                 value   :   A default to return if key isn't in the dict.
 
             Returns:
+
                 The retrieved item, or the supplied value.
 
         """
@@ -392,11 +407,13 @@ class TDictExt():
         Removes an item indexed by the key from the dict.
 
             Args:
+
                 cname   :   The name of the dict to use.
 
                 key     :   A key string to remove.
 
             Returns:
+
                 True for success, False otherwise.
 
         """
@@ -409,9 +426,11 @@ class TDictExt():
         Removes all items from the named dict.
 
             Args:
+
                 cname   :   The name of the dict to use.
 
             Returns:
+
                 True for success, False otherwise.
 
         """
@@ -424,11 +443,12 @@ class TDictExt():
         Returns a list with the keys in the named dict.
 
             Args:
+
                 cname   :   The name of the dict to use.
 
             Returns:
-                A list[] of keys in the dict.  The list may be empty
-                if there are none.
+
+                A list[] of keys in the dict.  The list may be empty if there are none.
 
                 None if there was an error.
 
@@ -443,11 +463,12 @@ class TDictExt():
         tuple with (key,value) for each..
 
             Args:
+
                 cname   :   The name of the dict to use.
 
             Returns:
-                A list with items in the dict, or an empty list if
-                there are none.
+
+                A list with items in the dict, or an empty list if there are none.
 
         """
 
@@ -459,9 +480,11 @@ class TDictExt():
         Returns the number of items currently in the tdict.
 
             Args:
+
                 cname   :   The name of the dict to use.
 
             Returns:
+
                 An int with the number of items.
 
         """
@@ -475,9 +498,11 @@ class TDictExt():
         the contents of the specified tdict.
 
             Args:
+
                 cname   :   The name of the dict to use.
 
             Returns:
+
                 A Python dict with the contents of this tdict.
 
                 None if there was an error.
@@ -492,13 +517,15 @@ class TDictExt():
         Returns a list with the names of all current dictionaries.
 
             Args:
+
                 None
 
             Returns:
-                A list[] of active dictionaries.  The list may be empty if
-                there are none.
+
+                A list[] of active dictionaries.  The list may be empty if there are none.
 
                 None if there was an error.
+
         """
 
         if not self.__lock.acquire(blocking=True, timeout=self.__locktimeout):

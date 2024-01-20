@@ -1,0 +1,89 @@
+#
+# tlistdemo.apy
+#
+# This script demos some of the functions of the thread-safe tlist
+# Extension.  It almost exactly mirrors the standard Python list
+# functionality, except multiple threads can access the lists
+# simultaneously.
+#
+# Mark Anacker  closecrowd@pm.me
+# -------------------------------------------------------------------
+
+install_('time')
+
+#
+# Load the tlistext.py extension - if this invocation of apyshell.py 
+# has it available in the designated extensions directory.
+# By default, it would be there.
+#
+
+e = loadExtension_('tlistext')
+if not e:
+    print('Failed to load the tlist extension!')
+    exit_(1)
+
+
+# main section
+
+# create a nice plain Python list
+
+list1 = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ]
+print('list1=', list1)
+
+# now create a thread-safe tlist and pre-populate it
+# with the contents of list1
+rv = tlist_open_('tlist1', list1)
+
+# print the list so far
+print('tlist1=',tlist_get_('tlist1'))
+
+# append an item to the list
+tlist_append_('tlist1', 11)
+print('append 11 at the end:',tlist_get_('tlist1'))
+
+# inserts and pops
+
+print('Inserting and Popping')
+
+# insert at the head
+tlist_insert_('tlist1', 99, 0)
+print('insert 99 at index=0',tlist_get_('tlist1'))
+tlist_pop_('tlist1', 0)
+print('pop at index=0',tlist_get_('tlist1'))
+# insert at the tail
+tlist_insert_('tlist1', 99, None)
+print('insert 99 at index=None',tlist_get_('tlist1'))
+tlist_pop_('tlist1', None)
+print('pop at index=None',tlist_get_('tlist1'))
+# from the left
+tlist_insert_('tlist1', 99, 4)
+print('insert 99 at index=4',tlist_get_('tlist1'))
+tlist_pop_('tlist1', 4)
+print('pop at index=4',tlist_get_('tlist1'))
+# from the right
+tlist_insert_('tlist1', 99, -4)
+print('insert 99 at index=-4',tlist_get_('tlist1'))
+tlist_pop_('tlist1', -4)
+print('pop at index=-4',tlist_get_('tlist1'))
+
+# clean the list
+tlist_remove_('tlist1', 11)
+print('remove the 11',tlist_get_('tlist1'))
+
+# length
+print('length is',tlist_len_('tlist1'))
+
+# reverse
+tlist_reverse_('tlist1')
+print('reversed',tlist_get_('tlist1'))
+
+# negative indices
+print('subset -6 to -1 by 2',tlist_get_('tlist1', -6, -1, 2))
+
+# clear it
+tlist_clear_('tlist1')
+
+# done
+tlist_close_('tlist1')
+
+print('done')

@@ -1,0 +1,100 @@
+#
+# tlisttaskdemo.apy
+#
+# This apyshell script demos the multi-threading tasks Extension,
+# as well as multiple entities using the same tlist object.
+#
+# Here we start a non-repeating task in another thread.  It's only
+# job is to stuff numbers into the defined tlist.  Multiple
+# threads can access the list simultaneously.  The while loop in
+# the main section grabs the items as they appear in the list, 
+# modifying it as it goes.
+#
+#
+# Mark Anacker  closecrowd@pm.me
+# -------------------------------------------------------------------
+
+install_('time')
+
+#
+# Load the tlistext.py and tasksext.py extensions - if this invocation of
+# apyshell.py has them available in the designated extensions directory.  
+# By default, they would be there.
+#
+
+e = loadExtension_('tlistext')
+if not e:
+    print('Failed to load the tlist extension!')
+    exit_(1)
+
+e = loadExtension_('tasksext')
+if not e:
+    print('Failed to load the tasks extension!')
+    exit_(1)
+
+
+# This is a non-repeating task that runs (once) in a separate thread.
+# All it does is append the numbers 0-9 to a tlist, then it exits.
+
+def task1(dat1):
+    print('task started')
+
+    for n in range(0,10):
+        tlist_append_('mylist', n)
+        print('task added',n,'to mylist')
+        sleep_(0.75)
+
+    print('list =', tlist_get_('mylist'))
+    print('task done')
+
+
+
+# main section
+
+# create the list
+tl = tlist_open_('mylist')
+
+# create the task as a 1-time background service
+tasks_open_('t1', 'task1', None, 0)
+
+# start the background task
+tasks_start_('t1')
+
+# this is running in the main thread.  We wait for an item to be
+# added to the list, or the 2-second timeout.  Then we pop the
+# head item from the list and print it.  This happily runs while
+# the background task is added new items to the list.
+
+print('Main loop starting')
+
+while True:
+    # wait for data in the list - 2 second timeout
+    ret = tlist_wait_('mylist', 2)
+    # if there was something in the list
+    if ret:
+        # grab the head entry, removing it from the list
+        val = tlist_pop_('mylist', 0)
+        print('main got:', val,'from mylist')
+        # and exit when we're done.
+        if val == 9:
+            break
+    sleep_(2)
+
+print('Main loop ended')
+
+# clean up
+
+tasks_close_('t1')
+tlist_close_('mylist')
+
+print('done')
+
+
+
+
+
+
+
+
+
+
