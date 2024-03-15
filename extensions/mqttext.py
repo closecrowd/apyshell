@@ -70,7 +70,7 @@ MODNAME = "mqttext"
 ##############################################################################
 
 DEBUG = False
-# DEBUG=True
+DEBUG=True
 def debug(*args):
     if DEBUG:
         print(MODNAME, str(args))
@@ -125,6 +125,11 @@ class MqttExt():
         self.__cmddict = {}
 
         self.__conns = {}   # mqtt connection objects
+
+        if 'CallbackAPIVersion' in mqtt.__dict__:
+            self.__pahover = 2
+        else:
+            self.__pahover = 1
 
 
     def register(self):
@@ -425,6 +430,11 @@ class MqttConnection():
         self.__wildcardhandlers = {}
         self.__client = None
 
+        if 'CallbackAPIVersion' in mqtt.__dict__:
+            self.__pahover = 2
+        else:
+            self.__pahover = 1
+
 
     def connect_(self, **kwargs):
 
@@ -602,7 +612,14 @@ class MqttConnection():
 
         if self.__client is None:
             self.__connected = False
-            self.__client = mqtt.Client(self.__clientid, clean_session=True, userdata=self.__name)
+
+            if self.__pahover == 2:
+                # mqtt V2 api
+                self.__client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION1, self.__clientid, clean_session=True, userdata=self.__name)
+            else:
+                # mqtt V1 api
+                self.__client = mqtt.Client(self.__clientid, clean_session=True, userdata=self.__name)
+
             self.__client.on_connect = self.on_connect
             self.__client.on_disconnect = self.on_disconnect
             self.__client.on_message = self.on_message
